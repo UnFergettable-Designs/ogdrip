@@ -1,0 +1,16 @@
+# Binaries for programs and tests
+*.test
+*.out
+
+# Test results
+**/_test/
+*.coverprofile
+
+# Packages built by go install
+pkg/
+
+# Editor and IDE temporary files
+.vscode/
+*.swp
+*.swo
+*~
