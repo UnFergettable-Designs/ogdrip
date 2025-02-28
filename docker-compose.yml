@@ -1,22 +1,48 @@
-version: "3"
-
 services:
-  opengraph-generator:
+  # Frontend service (Astro+Svelte with Node.js + PNPM)
+  frontend:
     build:
-      context: .
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - BACKEND_URL=http://backend:8888
+      - NODE_ENV=development
+      - SVELTE_FORCE_COMPILE=true
+      - ASTRO_TELEMETRY_DISABLED=1
+    depends_on:
+      - backend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+      - frontend_pnpm_store:/root/.local/share/pnpm/store
+      - outputs:/app/public/outputs
+      - ./frontend/public/images:/app/public/images
+
+  # Backend service (Go with ChromeDP)
+  backend:
+    build:
+      context: ./backend
       dockerfile: Dockerfile
     ports:
       - "8888:8888"
     environment:
       - PORT=8888
-      - BASE_URL=http://localhost:8888 # Change this to your public URL in production
+      - BASE_URL=http://backend:8888
       - ENABLE_CORS=true
+      - OUTPUT_DIR=/app/outputs
     volumes:
-      - ./outputs:/app/outputs
+      - outputs:/app/outputs
     restart: unless-stopped
-    # Add the following if you want to limit resource usage
     deploy:
       resources:
         limits:
           cpus: "2"
           memory: 2G
+
+volumes:
+  frontend_node_modules:
+  frontend_pnpm_store:
+  outputs:

@@ -1,4 +1,39 @@
 {
     "IDX.aI.enableInlineCompletion": true,
-    "IDX.aI.enableCodebaseIndexing": true
+    "IDX.aI.enableCodebaseIndexing": true,
+    "deno.enable": true,
+    "deno.lint": true,
+    "deno.unstable": false,
+    "deno.importMap": "./deno.json",
+    "deno.disablePaths": ["node_modules"],
+    "deno.suggest.imports.hosts": {
+        "https://deno.land": true,
+        "https://esm.sh": true,
+        "https://cdn.skypack.dev": true,
+        "https://cdn.jsdelivr.net": true
+    },
+    "files.associations": {
+        "*.svelte": "svelte",
+        "*.astro": "astro"
+    },
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    "[astro]": {
+        "editor.defaultFormatter": "astro-build.astro-vscode"
+    },
+    "[svelte]": {
+        "editor.defaultFormatter": "svelte.svelte-vscode"
+    },
+    "svelte.plugin.svelte.compilerWarnings": {
+        "missing-custom-element-compile-options": "ignore"
+    },
+    "editor.formatOnSave": true,
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "svelte",
+        "astro"
+    ]
 }

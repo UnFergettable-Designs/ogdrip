@@ -1,0 +1,37 @@
+{
+  "name": "ogdrip",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "dev:frontend": "turbo dev:frontend --filter=@ogdrip/frontend",
+    "dev:backend": "turbo dev:backend --filter=@ogdrip/backend",
+    "dev:all": "turbo dev:all",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "format": "prettier --write \"**/*.{ts,tsx,md,js,jsx,json}\"",
+    "preview": "turbo preview --filter=@ogdrip/frontend",
+    "start": "turbo start",
+    "prepare": "husky",
+    "setup": "mkdir -p frontend/src/utils && mkdir -p frontend/public/images",
+    "setup:backend": "mkdir -p backend/build",
+    "docker:build": "docker-compose build",
+    "docker:start": "docker-compose up",
+    "docker:clean": "docker-compose down -v && docker-compose build --no-cache && docker-compose up"
+  },
+  "devDependencies": {
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5",
+    "turbo": "^2.4.4"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@8.15.4",
+  "lint-staged": {
+    "*.{js,ts,tsx,svelte,astro,css,md,json}": [
+      "prettier --write"
+    ]
+  }
+}

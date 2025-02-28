@@ -6,6 +6,12 @@
       "go": {
         "pkg-path": "go",
         "version": "^1.23"
+      },
+      "nodejs": {
+        "pkg-path": "nodejs"
+      },
+      "pnpm": {
+        "pkg-path": "pnpm"
       }
     },
     "hook": {
@@ -33,13 +39,13 @@
       "description": "Go Programming language",
       "install_id": "go",
       "license": "BSD-3-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0196c0175e9191c474c26ab5548db27ef5d34b05",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
       "name": "go-1.23.6",
       "pname": "go",
-      "rev": "0196c0175e9191c474c26ab5548db27ef5d34b05",
-      "rev_count": 758135,
-      "rev_date": "2025-02-24T03:24:50Z",
-      "scrape_date": "2025-02-25T02:25:54Z",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
       "stabilities": [
         "unstable"
       ],
@@ -62,13 +68,13 @@
       "description": "Go Programming language",
       "install_id": "go",
       "license": "BSD-3-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0196c0175e9191c474c26ab5548db27ef5d34b05",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
       "name": "go-1.23.6",
       "pname": "go",
-      "rev": "0196c0175e9191c474c26ab5548db27ef5d34b05",
-      "rev_count": 758135,
-      "rev_date": "2025-02-24T03:24:50Z",
-      "scrape_date": "2025-02-25T02:25:54Z",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
       "stabilities": [
         "unstable"
       ],
@@ -91,13 +97,13 @@
       "description": "Go Programming language",
       "install_id": "go",
       "license": "BSD-3-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0196c0175e9191c474c26ab5548db27ef5d34b05",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
       "name": "go-1.23.6",
       "pname": "go",
-      "rev": "0196c0175e9191c474c26ab5548db27ef5d34b05",
-      "rev_count": 758135,
-      "rev_date": "2025-02-24T03:24:50Z",
-      "scrape_date": "2025-02-25T02:25:54Z",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
       "stabilities": [
         "unstable"
       ],
@@ -120,13 +126,13 @@
       "description": "Go Programming language",
       "install_id": "go",
       "license": "BSD-3-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0196c0175e9191c474c26ab5548db27ef5d34b05",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
       "name": "go-1.23.6",
       "pname": "go",
-      "rev": "0196c0175e9191c474c26ab5548db27ef5d34b05",
-      "rev_count": 758135,
-      "rev_date": "2025-02-24T03:24:50Z",
-      "scrape_date": "2025-02-25T02:25:54Z",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
       "stabilities": [
         "unstable"
       ],
@@ -137,6 +143,242 @@
       ],
       "outputs": {
         "out": "/nix/store/8zgc91q1igzgmg36mglxrk8qa1r2dvsd-go-1.23.6"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs",
+      "broken": false,
+      "derivation": "/nix/store/nl4c43rbyv6mvb0a0y7p36wi928g1gib-nodejs-22.14.0.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
+      "name": "nodejs-22.14.0",
+      "pname": "nodejs",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "22.14.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "libv8": "/nix/store/slffbl0q14qc93dslaynyzh005rd869s-nodejs-22.14.0-libv8",
+        "out": "/nix/store/91y8h7rysgi5cl8hsj2bmjd00dq2l9pk-nodejs-22.14.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs",
+      "broken": false,
+      "derivation": "/nix/store/hh2siwhf3zxqnfgqa55kls2fz3v37l27-nodejs-22.14.0.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
+      "name": "nodejs-22.14.0",
+      "pname": "nodejs",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "22.14.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "libv8": "/nix/store/zb1ly8w6vdw2pjxwkbm3vymyfxyy7af8-nodejs-22.14.0-libv8",
+        "out": "/nix/store/ji8zs96759g59b4q6kz94pbfq6gvlazx-nodejs-22.14.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs",
+      "broken": false,
+      "derivation": "/nix/store/ikl0p2wi3gvzp55kxjjqwj63msl6pnlf-nodejs-22.14.0.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
+      "name": "nodejs-22.14.0",
+      "pname": "nodejs",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "22.14.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "libv8": "/nix/store/24z3qqnvs154idkbbbpjd55m11clidad-nodejs-22.14.0-libv8",
+        "out": "/nix/store/067kj1aav6z9jhqbkyapjwjjrgl38ihs-nodejs-22.14.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs",
+      "broken": false,
+      "derivation": "/nix/store/ylk0rgvzaj618qj0g00cwm5909hp71f0-nodejs-22.14.0.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
+      "name": "nodejs-22.14.0",
+      "pname": "nodejs",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "22.14.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "libv8": "/nix/store/3ympkr1v1z4r3vfyc6ikhx1chq5g464l-nodejs-22.14.0-libv8",
+        "out": "/nix/store/7l1wra7b87yci5dln0hm0k8rwww6f2xj-nodejs-22.14.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "pnpm",
+      "broken": false,
+      "derivation": "/nix/store/piywznv1nzg1mvfm5acfhr573bq42z64-pnpm-10.4.1.drv",
+      "description": "Fast, disk space efficient package manager for JavaScript",
+      "install_id": "pnpm",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
+      "name": "pnpm-10.4.1",
+      "pname": "pnpm",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "10.4.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/m0n6q0rzjz19my9n14i6vjgp2p58kndy-pnpm-10.4.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "pnpm",
+      "broken": false,
+      "derivation": "/nix/store/pdvflnpa3c554wnd9jlzjyr1vxv8qcxd-pnpm-10.4.1.drv",
+      "description": "Fast, disk space efficient package manager for JavaScript",
+      "install_id": "pnpm",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
+      "name": "pnpm-10.4.1",
+      "pname": "pnpm",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "10.4.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/anf24vw7baqw1yzmayj2gf18qf0jggkb-pnpm-10.4.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "pnpm",
+      "broken": false,
+      "derivation": "/nix/store/zhdjl7fx07vkdd56jvhyvrjq17wd3pvs-pnpm-10.4.1.drv",
+      "description": "Fast, disk space efficient package manager for JavaScript",
+      "install_id": "pnpm",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
+      "name": "pnpm-10.4.1",
+      "pname": "pnpm",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "10.4.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/bs3xlpdm16zw80ajn10apiiphl70v298-pnpm-10.4.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "pnpm",
+      "broken": false,
+      "derivation": "/nix/store/bmxwr0blyh6fkkih33nw8s21cv9m19bl-pnpm-10.4.1.drv",
+      "description": "Fast, disk space efficient package manager for JavaScript",
+      "install_id": "pnpm",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5135c59491985879812717f4c9fea69604e7f26f",
+      "name": "pnpm-10.4.1",
+      "pname": "pnpm",
+      "rev": "5135c59491985879812717f4c9fea69604e7f26f",
+      "rev_count": 759373,
+      "rev_date": "2025-02-26T09:09:39Z",
+      "scrape_date": "2025-02-28T05:09:33Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "10.4.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/d6x15s2jih7l2anmqjs34k7qpa9ixdyq-pnpm-10.4.1"
       },
       "system": "x86_64-linux",
       "group": "toplevel",

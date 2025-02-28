@@ -1,3 +1,4 @@
+# Go related
 # Binaries for programs and tests
 *.test
 *.out
@@ -9,8 +10,63 @@
 # Packages built by go install
 pkg/
 
+# Go build output
+backend/build/
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Node.js related
+node_modules/
+.npm
+.pnpm-store/
+pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.node_repl_history
+
+# Build outputs
+dist/
+.astro/
+.turbo/
+.cache/
+.output/
+.vercel/
+.netlify/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
 # Editor and IDE temporary files
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
 *.swp
 *.swo
 *~
+.cursorrules
+
+# OS specific files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.directory
+
+# Logs
+logs/
+*.log
+
+# Deno specific
+deno.lock
+.deno/

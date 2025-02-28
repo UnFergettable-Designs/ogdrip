@@ -1,0 +1,16 @@
+{
+  "name": "@ogdrip/backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go backend for Open Graph image generation (no Node dependencies required)",
+  "scripts": {
+    "dev": "go run main.go server.go service.go -service",
+    "dev:backend": "go run main.go server.go service.go -service",
+    "build": "mkdir -p ./build && go build -o ./build/ogdrip-backend *.go",
+    "start": "go run main.go server.go service.go -service",
+    "clean": "rm -rf ./build && rm -rf .turbo",
+    "lint": "go vet ./..."
+  },
+  "dependencies": {},
+  "devDependencies": {}
+} 

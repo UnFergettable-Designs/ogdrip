@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  opengraph-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    environment:
+      - PORT=8888
+      - BASE_URL=http://localhost:8888 # Change this to your public URL in production
+      - ENABLE_CORS=true
+    volumes:
+      - ./outputs:/app/outputs
+    restart: unless-stopped
+    # Add the following if you want to limit resource usage
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
