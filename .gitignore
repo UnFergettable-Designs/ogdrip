@@ -70,3 +70,6 @@ logs/
 # Deno specific
 deno.lock
 .deno/
+
+# Project specific
+backend/outputs/

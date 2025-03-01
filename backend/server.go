@@ -166,49 +166,91 @@ func startLocalServer(htmlContent string, imagePath string, port string) string 
 
 // ServerMain is the entry point for the OG generator functionality
 func ServerMain() {
-	// Define command-line flags
-	webpageURL := flag.String("url", "", "Webpage URL to capture")
-	outputPath := flag.String("output", "og_image.png", "Output file path for the screenshot")
-	outputHTML := flag.String("html", "og_meta.html", "Output file for HTML with meta tags")
-	quality := flag.Int("quality", 90, "Screenshot quality (0-100)")
-	waitTime := flag.Int("wait", 8000, "Wait time in milliseconds before taking screenshot")
-	selector := flag.String("selector", "body", "CSS selector to wait for before capturing")
-	debug := flag.Bool("debug", false, "Enable debug mode with additional logging")
-	verbose := flag.Bool("verbose", false, "Enable verbose logging")
-	
-	// Open Graph specific options
-	title := flag.String("title", "", "Title for Open Graph meta tags")
-	description := flag.String("description", "", "Description for Open Graph meta tags")
-	ogType := flag.String("type", defaultType, "Type for Open Graph meta tags")
-	siteName := flag.String("site", "", "Site name for Open Graph meta tags")
-	targetURL := flag.String("target-url", "", "Target URL for the content (where it will be hosted)")
-	imgWidth := flag.Int("width", defaultImageWidth, "Width of the Open Graph image")
-	imgHeight := flag.Int("height", defaultImageHeight, "Height of the Open Graph image")
-	twitterCard := flag.String("twitter-card", defaultTwitterCard, "Twitter card type")
-	
-	// Preview option
-	preview := flag.Bool("preview", false, "Start a local server to preview the Open Graph implementation")
-	port := flag.String("port", "8080", "Port for the preview server")
+	// First check if API service mode is active
+	isAPIService := false
+	// Check command line args for service flag
+	for _, arg := range os.Args {
+		if arg == "-api-service" || arg == "-api-service=true" {
+			isAPIService = true
+			break
+		}
+	}
+	// Also check environment variable
+	if os.Getenv("OG_API_SERVICE") == "true" {
+		isAPIService = true
+	}
 
-	// Parse command-line flags
-	flag.Parse()
+	// Create a new FlagSet and define all the flags
+	fs := flag.NewFlagSet("og-generator", flag.ContinueOnError)
+	fs.SetOutput(ioutil.Discard) // Suppress error output
+	
+	// Define all flags
+	webpageURL := fs.String("url", "", "Webpage URL to capture")
+	outputPath := fs.String("output", "outputs/og_image.png", "Output file path for the screenshot")
+	outputHTML := fs.String("html", "outputs/og_meta.html", "Output file for HTML with meta tags")
+	quality := fs.Int("quality", 90, "Screenshot quality (0-100)")
+	waitTime := fs.Int("wait", 8000, "Wait time in milliseconds before taking screenshot")
+	selector := fs.String("selector", "body", "CSS selector to wait for before capturing")
+	debug := fs.Bool("debug", false, "Enable debug mode with additional logging")
+	verbose := fs.Bool("verbose", false, "Enable verbose logging")
+	title := fs.String("title", "", "Title for Open Graph meta tags")
+	description := fs.String("description", "", "Description for Open Graph meta tags")
+	ogType := fs.String("type", defaultType, "Type for Open Graph meta tags")
+	siteName := fs.String("site", "", "Site name for Open Graph meta tags")
+	targetURL := fs.String("target-url", "", "Target URL for the content (where it will be hosted)")
+	imgWidth := fs.Int("width", defaultImageWidth, "Width of the Open Graph image")
+	imgHeight := fs.Int("height", defaultImageHeight, "Height of the Open Graph image")
+	twitterCard := fs.String("twitter-card", defaultTwitterCard, "Twitter card type")
+	preview := fs.Bool("preview", false, "Start a local server to preview the Open Graph implementation")
+	port := fs.String("port", "8080", "Port for the preview server")
+	isApiService := fs.Bool("api-service", isAPIService, "Set to true when running as part of the API service")
+	
+	// Parse the command line arguments
+	_ = fs.Parse(os.Args[1:])
+	
+	if *verbose {
+		log.Printf("Command-line arguments: %v", os.Args)
+		log.Printf("Output paths: image=%s, html=%s", *outputPath, *outputHTML)
+		log.Printf("Key parameters: url=%s, title=%s, api-service=%v", *webpageURL, *title, *isApiService)
+	}
 
-	// Check for required inputs
+	// Check for required inputs - but don't exit, just log the error
 	if *webpageURL == "" && *title == "" {
-		fmt.Println("Please provide either a webpage URL (-url) or a title (-title) for your Open Graph content.")
-		os.Exit(1)
+		log.Printf("Warning: Neither a webpage URL (-url) nor a title (-title) was provided for Open Graph content.")
+		// Use defaults instead of exiting
+		*title = "Generated Open Graph Content"
 	}
 
 	// Create absolute path for output files
 	absOutputPath, err := filepath.Abs(*outputPath)
 	if err != nil {
-		log.Fatalf("Error creating absolute path: %v", err)
+		log.Printf("Error creating absolute path: %v", err)
+		return
 	}
 	
 	absHTMLPath, err := filepath.Abs(*outputHTML)
 	if err != nil {
-		log.Fatalf("Error creating absolute path: %v", err)
+		log.Printf("Error creating absolute path: %v", err)
+		return
 	}
+
+	// Ensure parent directory exists for each output file
+	outputDir := filepath.Dir(absOutputPath)
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		log.Printf("Error creating output directory for image: %v", err)
+		return
+	}
+
+	htmlDir := filepath.Dir(absHTMLPath)
+	if htmlDir != outputDir {
+		if err := os.MkdirAll(htmlDir, 0755); err != nil {
+			log.Printf("Error creating output directory for HTML: %v", err)
+			return
+		}
+	}
+
+	// Log the paths we're using
+	log.Printf("Using output paths: Image=%s, HTML=%s", absOutputPath, absHTMLPath)
 
 	// Generate image if a URL is provided
 	if *webpageURL != "" {
@@ -226,11 +268,20 @@ func ServerMain() {
 			}
 		}
 
+		// Add http:// prefix if no protocol is present
+		if !strings.Contains(fixedURL, "://") {
+			fixedURL = "http://" + fixedURL
+			if *verbose {
+				log.Printf("Added http:// prefix to URL: %s", fixedURL)
+			}
+		}
+
 		// Verify URL is valid
 		_, err := url.Parse(fixedURL)
 		if err != nil {
-			fmt.Printf("Invalid URL: %s\nError: %v\n", fixedURL, err)
-			os.Exit(1)
+			log.Printf("Invalid URL: %s\nError: %v\n", fixedURL, err)
+			// Return early instead of exiting
+			return
 		}
 
 		if *verbose {
@@ -494,8 +545,23 @@ func ServerMain() {
 	_, err = os.Stat(absOutputPath)
 	imageExists := !os.IsNotExist(err)
 	
+	if imageExists {
+		if *verbose {
+			log.Printf("Image file exists at: %s", absOutputPath)
+		}
+	} else {
+		if *verbose {
+			log.Printf("Image file does not exist at: %s", absOutputPath)
+		}
+		fmt.Println("Warning: No image was generated. Using a placeholder in the meta tags.")
+	}
+	
 	if *preview {
 		// For preview, use relative path to the image
+		imageURL = "/" + filepath.Base(absOutputPath)
+	} else if *isApiService {
+		// When running as part of the API service, just use the filename
+		// The service will handle constructing the full URL
 		imageURL = "/" + filepath.Base(absOutputPath)
 	} else {
 		// For production use the full URL
@@ -527,23 +593,30 @@ func ServerMain() {
 		LocalImage:  *preview,
 	}
 	
-	// Generate HTML with meta tags
-	metaHTML := generateMetaTags(ogData)
+	htmlOutput := generateMetaTags(ogData)
 	
-	// Save HTML to file
-	if err := ioutil.WriteFile(absHTMLPath, []byte(metaHTML), 0644); err != nil {
-		log.Fatalf("Error saving HTML file: %v", err)
+	// Save HTML to file, using the absolute path to ensure it's saved to the correct location
+	if err := ioutil.WriteFile(absHTMLPath, []byte(htmlOutput), 0644); err != nil {
+		log.Fatal(err)
 	}
 	
 	fmt.Printf("HTML with Open Graph meta tags saved to %s\n", absHTMLPath)
 	
-	// Start preview server if requested
+	if *verbose {
+		log.Printf("Files generated - Image: %s, HTML: %s", absOutputPath, absHTMLPath)
+	}
+	
+	// If preview mode is enabled, start a local server
 	if *preview {
-		serverURL := startLocalServer(metaHTML, absOutputPath, *port)
-		fmt.Printf("\nPreview your Open Graph implementation at: %s\n", serverURL)
-		fmt.Println("Press Ctrl+C to stop the server.")
+		serverURL := startLocalServer(htmlOutput, absOutputPath, *port)
+		fmt.Printf("Preview available at: %s\n", serverURL)
+		fmt.Printf("Press Ctrl+C to stop the server.\n")
 		
-		// Keep the program running
+		// Keep the program running until it's terminated
 		select {}
+	}
+	
+	if *verbose && *isApiService {
+		log.Printf("ServerMain completed successfully. Returning to API service.")
 	}
 }
