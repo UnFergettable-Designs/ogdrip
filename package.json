@@ -17,12 +17,17 @@
     "setup:backend": "mkdir -p backend/build",
     "docker:build": "docker-compose build",
     "docker:start": "docker-compose up",
-    "docker:clean": "docker-compose down -v && docker-compose build --no-cache && docker-compose up"
+    "docker:clean": "docker-compose down -v && docker-compose build --no-cache && docker-compose up",
+    "test": "turbo test",
+    "test:coverage": "turbo test:coverage",
+    "docker:prod:build": "docker-compose -f docker-compose.production.yml build",
+    "docker:prod:start": "docker-compose -f docker-compose.production.yml up -d",
+    "docker:prod:stop": "docker-compose -f docker-compose.production.yml down"
   },
   "devDependencies": {
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.2",
-    "prettier": "^3.2.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.5.2",
     "turbo": "^2.4.4"
   },
   "engines": {
