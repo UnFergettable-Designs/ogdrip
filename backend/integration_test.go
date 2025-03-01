@@ -270,4 +270,82 @@ func TestRunGeneratorDirectly(t *testing.T) {
 			t.Errorf("Error reading HTML file: %v", err)
 		}
 	}
+}
+
+// TestHealthEndpoint tests the health endpoint of the API
+func TestHealthEndpoint(t *testing.T) {
+	// Create a new server instance
+	service := NewService()
+	
+	// Create a request to the health endpoint
+	req, err := http.NewRequest("GET", "/health", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		service.HealthHandler(w, r)
+	})
+	
+	// Serve the request
+	handler.ServeHTTP(rr, req)
+	
+	// Check the status code
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+	
+	// Check the response body
+	expected := `{"status":"ok"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+}
+
+// TestAPIIntegration tests the full API flow with a mock request
+func TestAPIIntegration(t *testing.T) {
+	// Skip this test in CI environments without a browser
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+	
+	// Create a timeout context
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	
+	// Create a new service
+	service := NewService()
+	
+	// Initialize the service
+	err := service.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Failed to initialize service: %v", err)
+	}
+	defer service.Shutdown()
+	
+	// Test the service with a sample URL
+	// This is a simplified test - adjust based on your actual API
+	testURL := "https://example.com"
+	result, err := service.GenerateOpenGraph(ctx, testURL)
+	
+	if err != nil {
+		t.Fatalf("Failed to generate Open Graph: %v", err)
+	}
+	
+	if result == nil {
+		t.Fatal("Expected result but got nil")
+	}
+	
+	// Check that the result contains expected fields
+	if result.URL != testURL {
+		t.Errorf("Expected URL %s but got %s", testURL, result.URL)
+	}
+	
+	if result.Title == "" {
+		t.Error("Expected title but got empty string")
+	}
 } 
