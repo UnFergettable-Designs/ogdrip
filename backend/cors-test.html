@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>CORS Test Page</h1>
+    <p>This page tests API connections with detailed debugging information for CORS issues.</p>
+    
+    <div>
+        <h2>Connection Options</h2>
+        <button id="test-fetch">Test with Fetch API</button>
+        <button id="test-xhr">Test with XMLHttpRequest</button>
+        <button id="test-no-cors">Test with No-CORS Mode</button>
+        <button id="test-credentials">Test with Credentials</button>
+    </div>
+
+    <div>
+        <h2>Results</h2>
+        <pre id="results">Click any button to test connection...</pre>
+    </div>
+
+    <script>
+        // Helper to display results
+        function showResult(message, isError = false) {
+            const results = document.getElementById('results');
+            results.innerHTML = message;
+            results.className = isError ? 'error' : 'success';
+        }
+
+        // Helper to display response headers
+        function formatHeaders(headers) {
+            if (!headers) return 'No headers available';
+            
+            if (headers instanceof Headers) {
+                let headersObj = {};
+                headers.forEach((value, name) => {
+                    headersObj[name] = value;
+                });
+                return JSON.stringify(headersObj, null, 2);
+            }
+            
+            return JSON.stringify(headers, null, 2);
+        }
+
+        // Test with standard fetch
+        document.getElementById('test-fetch').addEventListener('click', async () => {
+            try {
+                showResult('Testing with Fetch API...');
+                
+                const response = await fetch('http://localhost:8888/api/health', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const responseData = await response.json();
+                
+                showResult(`
+Connection successful!
+Status: ${response.status} ${response.statusText}
+
+Headers:
+${formatHeaders(response.headers)}
+
+Response Data:
+${JSON.stringify(responseData, null, 2)}
+                `);
+            } catch (error) {
+                showResult(`
+Error with Fetch API:
+${error.message}
+
+CORS issues often appear as "TypeError: Failed to fetch" or 
+"NetworkError when attempting to fetch resource".
+
+Network information:
+- Browser Origin: ${window.location.origin}
+- Target API: http://localhost:8888/api/health
+                `, true);
+            }
+        });
+
+        // Test with XMLHttpRequest
+        document.getElementById('test-xhr').addEventListener('click', () => {
+            showResult('Testing with XMLHttpRequest...');
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'http://localhost:8888/api/health', true);
+            xhr.setRequestHeader('Accept', 'application/json');
+            
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // Convert headers to an object for display
+                    const headersText = xhr.getAllResponseHeaders();
+                    const headerLines = headersText.trim().split(/[\r\n]+/);
+                    const headerMap = {};
+                    
+                    headerLines.forEach(line => {
+                        const parts = line.split(': ');
+                        const header = parts.shift();
+                        const value = parts.join(': ');
+                        headerMap[header] = value;
+                    });
+                    
+                    try {
+                        const responseData = JSON.parse(xhr.responseText);
+                        showResult(`
+Connection successful!
+Status: ${xhr.status} ${xhr.statusText}
+
+Headers:
+${JSON.stringify(headerMap, null, 2)}
+
+Response Data:
+${JSON.stringify(responseData, null, 2)}
+                        `);
+                    } catch (e) {
+                        showResult(`
+Connection successful but invalid JSON:
+${xhr.responseText}
+                        `, true);
+                    }
+                } else {
+                    showResult(`
+Error with XMLHttpRequest:
+Status: ${xhr.status} ${xhr.statusText}
+Response: ${xhr.responseText}
+                    `, true);
+                }
+            };
+            
+            xhr.onerror = function() {
+                showResult(`
+Error with XMLHttpRequest:
+The request failed, likely due to a CORS issue.
+
+CORS issues with XHR typically appear as network errors with no
+additional details.
+
+Network information:
+- Browser Origin: ${window.location.origin}
+- Target API: http://localhost:8888/api/health
+                `, true);
+            };
+            
+            xhr.send();
+        });
+
+        // Test with no-cors mode
+        document.getElementById('test-no-cors').addEventListener('click', async () => {
+            try {
+                showResult('Testing with no-cors mode...');
+                
+                const response = await fetch('http://localhost:8888/api/health', {
+                    method: 'GET',
+                    mode: 'no-cors',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                showResult(`
+Request completed with no-cors mode.
+Status: ${response.type}
+
+Note: With 'no-cors' mode, you cannot read the response content
+or headers, but the request will not be blocked by CORS.
+The response type '${response.type}' indicates an opaque response.
+
+This test only verifies that the request was sent and received
+a response, but cannot tell if the response was successful.
+                `);
+            } catch (error) {
+                showResult(`
+Error with no-cors mode:
+${error.message}
+
+This suggests a network-level issue beyond CORS.
+
+Network information:
+- Browser Origin: ${window.location.origin}
+- Target API: http://localhost:8888/api/health
+                `, true);
+            }
+        });
+
+        // Test with credentials
+        document.getElementById('test-credentials').addEventListener('click', async () => {
+            try {
+                showResult('Testing with credentials included...');
+                
+                const response = await fetch('http://localhost:8888/api/health', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const responseData = await response.json();
+                
+                showResult(`
+Connection successful with credentials!
+Status: ${response.status} ${response.statusText}
+
+Headers:
+${formatHeaders(response.headers)}
+
+Response Data:
+${JSON.stringify(responseData, null, 2)}
+                `);
+            } catch (error) {
+                showResult(`
+Error with credentials mode:
+${error.message}
+
+When using credentials, CORS requires:
+- Access-Control-Allow-Origin cannot be '*'
+- Access-Control-Allow-Credentials must be 'true'
+
+Network information:
+- Browser Origin: ${window.location.origin}
+- Target API: http://localhost:8888/api/health
+                `, true);
+            }
+        });
+    </script>
+</body>
+</html> 
