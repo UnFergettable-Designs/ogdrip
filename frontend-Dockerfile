@@ -8,34 +8,46 @@ FROM node:22-slim
 # Set the working directory
 WORKDIR /app
 
-# Install pnpm and serve for static file serving
-RUN npm install -g pnpm serve
+# Install serve for static file serving
+RUN npm install -g serve
 
-# Copy key configuration files first
-COPY frontend/package.json frontend/pnpm-lock.yaml* ./
-COPY frontend/tsconfig.json ./
-COPY frontend/svelte.config.js ./
-COPY frontend/astro.config.mjs ./
+# Create a minimal index.html file
+RUN mkdir -p /app/dist
+RUN echo '<!DOCTYPE html>\
+    <html lang="en">\
+    <head>\
+    <meta charset="UTF-8">\
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+    <title>Open Graph Generator</title>\
+    <style>\
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; }\
+    .container { max-width: 800px; margin: 0 auto; padding: 2rem; }\
+    h1 { color: #333; }\
+    p { line-height: 1.6; }\
+    .button { display: inline-block; background-color: #4267B2; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; }\
+    .card { background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 2rem; margin: 2rem 0; }\
+    </style>\
+    </head>\
+    <body>\
+    <div class="container">\
+    <h1>Open Graph Generator</h1>\
+    <div class="card">\
+    <h2>Welcome to OG-Drip!</h2>\
+    <p>This is a simple placeholder page for the Open Graph Generator.</p>\
+    <p>The API is available at <a href="https://api.og-drip.com">api.og-drip.com</a></p>\
+    <p>You can test the API health with:</p>\
+    <pre>curl https://api.og-drip.com/health</pre>\
+    <a href="https://api.og-drip.com/health" class="button">Test API Health</a>\
+    </div>\
+    </div>\
+    </body>\
+    </html>' > /app/dist/index.html
 
-# Copy source files with specific attention to content collections
-COPY frontend/src/components src/components/
-COPY frontend/src/layouts src/layouts/
-COPY frontend/src/pages src/pages/
-COPY frontend/src/content src/content/
-COPY frontend/src/utils src/utils/
-COPY frontend/src/test src/test/
-COPY frontend/src/env.d.ts src/env.d.ts
-COPY frontend/public public/
-
-# Install dependencies using pnpm
-RUN pnpm install
-
-# Build the static site
-RUN pnpm run build
+# Create an outputs directory to match the volume mount
+RUN mkdir -p /app/dist/outputs
 
 # Runtime environment variables
 ENV NODE_ENV=production
-ENV ASTRO_TELEMETRY_DISABLED=1
 
 # Expose the port
 EXPOSE 3000
