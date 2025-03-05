@@ -1,33 +1,22 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"crypto/md5"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
-	"os/signal"
-	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"text/template"
 	"time"
+	"bytes"
 
-	"github.com/chromedp/cdproto/emulation"
-	"github.com/chromedp/cdproto/network"
-	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/getsentry/sentry-go"
-	"github.com/google/uuid"
-	"github.com/rs/cors"
 )
 
 // Database instance

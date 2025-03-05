@@ -21,10 +21,32 @@ EOF
 COPY <<EOF /app/main.go
 package main
 
-import "fmt"
+import (
+    "fmt"
+    "log"
+    "net/http"
+    "os"
+)
 
 func main() {
-  fmt.Println("Open Graph Generator API")
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8888"
+    }
+    
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintf(w, "Open Graph Generator API Running")
+    })
+    
+    http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+        w.WriteHeader(http.StatusOK)
+        fmt.Fprintf(w, "OK")
+    })
+    
+    log.Printf("Starting server on port %s", port)
+    if err := http.ListenAndServe(":" + port, nil); err != nil {
+        log.Fatalf("Server failed: %v", err)
+    }
 }
 EOF
 

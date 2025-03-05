@@ -93,12 +93,22 @@ func TestBuildGeneratorArgs(t *testing.T) {
 	testReq.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	testReq.Form = form
 	
+	// Convert to GenerateRequest
+	generateReq := GenerateRequest{
+		URL:         "https://example.com",
+		Title:       "Test Title",
+		Description: "Test Description",
+		CustomParams: map[string]string{
+			"debug": "true",
+		},
+	}
+	
 	// Set output paths
 	imgPath := "/tmp/test_image.png"
 	htmlPath := "/tmp/test_meta.html"
 	
 	// Call the function
-	args := buildGeneratorArgs(testReq, imgPath, htmlPath)
+	args := buildGeneratorArgs(generateReq, imgPath, htmlPath)
 	
 	// Check expected arguments are present
 	expectedArgs := []string{

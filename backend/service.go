@@ -2,7 +2,6 @@ package main
 
 import (
 	"archive/zip"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,7 +15,6 @@ import (
 	"time"
 	"net/url"
 
-	"github.com/chromedp/chromedp"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/cors"
 )
@@ -51,6 +49,19 @@ var config = Config{
 	EnableCORS:   true,
 	MaxQueueSize: 10,
 	ChromePath:   "", // Will use system default if empty
+}
+
+// Global variable to track if Sentry is initialized
+var sentryInitialized bool
+
+// GenerateRequest represents a request to generate Open Graph assets
+type GenerateRequest struct {
+	URL          string                 `json:"url"`
+	Title        string                 `json:"title,omitempty"`
+	Description  string                 `json:"description,omitempty"`
+	ImageWidth   int                    `json:"image_width,omitempty"`
+	ImageHeight  int                    `json:"image_height,omitempty"`
+	CustomParams map[string]string      `json:"custom_params,omitempty"`
 }
 
 // loadConfig loads configuration from environment variables
@@ -503,7 +514,7 @@ func handleGenerateRequest(w http.ResponseWriter, r *http.Request) {
 			if dbErr == nil {
 				// Try to extract request ID from args
 				requestID := ""
-				for i, arg := range args {
+				for _, arg := range args {
 					if strings.HasPrefix(arg, "-output=") {
 						// Extract ID from output path
 						outputPath := strings.TrimPrefix(arg, "-output=")
@@ -1058,4 +1069,97 @@ func captureError(err error, context map[string]interface{}) {
 		}
 		sentry.CaptureException(err)
 	})
+}
+
+// handleDownloadRequest handles requests to download generated files
+func handleDownloadRequest(w http.ResponseWriter, r *http.Request) {
+	// Extract the filename from the URL path
+	filename := strings.TrimPrefix(r.URL.Path, "/api/download/")
+	if filename == "" {
+		http.Error(w, "No filename specified", http.StatusBadRequest)
+		return
+	}
+
+	// Build the full path to the file
+	outputDir := getOutputDir()
+	filePath := filepath.Join(outputDir, filename)
+
+	// Check if the file exists
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+
+	// Serve the file
+	http.ServeFile(w, r, filePath)
+}
+
+// sentryHandler wraps an http handler with Sentry error tracking
+func sentryHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// This is a placeholder for actual Sentry implementation
+		// In a real implementation, this would use the Sentry SDK to track errors
+		h.ServeHTTP(w, r)
+	})
+}
+
+// setupStaticFileServing configures paths for serving static files
+func setupStaticFileServing(mux *http.ServeMux) {
+	// Get the output directory
+	outputDir := getOutputDir()
+	
+	// Create a file server for the output directory
+	outputFileServer := http.FileServer(http.Dir(outputDir))
+	
+	// Set up a handler for the outputs path
+	mux.Handle("/outputs/", http.StripPrefix("/outputs/", outputFileServer))
+}
+
+// buildGeneratorArgs builds the arguments for the generator command
+func buildGeneratorArgs(req GenerateRequest, imgPath, htmlPath string) []string {
+	args := []string{}
+	
+	// Add required parameters
+	if req.URL != "" {
+		args = append(args, fmt.Sprintf("-url=%s", req.URL))
+	}
+	
+	// Add output path
+	args = append(args, fmt.Sprintf("-output=%s", imgPath))
+	
+	// Add HTML output path
+	args = append(args, fmt.Sprintf("-html=%s", htmlPath))
+	
+	// Add optional parameters if provided
+	if req.Title != "" {
+		args = append(args, fmt.Sprintf("-title=%s", req.Title))
+	}
+	
+	if req.Description != "" {
+		args = append(args, fmt.Sprintf("-description=%s", req.Description))
+	}
+	
+	if req.ImageWidth > 0 {
+		args = append(args, fmt.Sprintf("-width=%d", req.ImageWidth))
+	}
+	
+	if req.ImageHeight > 0 {
+		args = append(args, fmt.Sprintf("-height=%d", req.ImageHeight))
+	}
+	
+	// Add any custom parameters from the request
+	for key, value := range req.CustomParams {
+		args = append(args, fmt.Sprintf("-%s=%s", key, value))
+	}
+	
+	return args
+}
+
+// getOutputDir returns the configured output directory
+func getOutputDir() string {
+	// Use the configured output directory or default to ./outputs
+	if config.OutputDir != "" {
+		return config.OutputDir
+	}
+	return "./outputs"
 } 
