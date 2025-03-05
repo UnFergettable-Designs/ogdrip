@@ -12,20 +12,20 @@ WORKDIR /app
 RUN npm install -g pnpm serve
 
 # Copy key configuration files first
-COPY package.json pnpm-lock.yaml* ./
-COPY tsconfig.json ./
-COPY svelte.config.js ./
-COPY astro.config.mjs ./
+COPY frontend/package.json frontend/pnpm-lock.yaml* ./
+COPY frontend/tsconfig.json ./
+COPY frontend/svelte.config.js ./
+COPY frontend/astro.config.mjs ./
 
 # Copy source files with specific attention to content collections
-COPY src/components src/components/
-COPY src/layouts src/layouts/
-COPY src/pages src/pages/
-COPY src/content src/content/
-COPY src/utils src/utils/
-COPY src/test src/test/
-COPY src/env.d.ts src/env.d.ts
-COPY public public/
+COPY frontend/src/components src/components/
+COPY frontend/src/layouts src/layouts/
+COPY frontend/src/pages src/pages/
+COPY frontend/src/content src/content/
+COPY frontend/src/utils src/utils/
+COPY frontend/src/test src/test/
+COPY frontend/src/env.d.ts src/env.d.ts
+COPY frontend/public public/
 
 # Install dependencies using pnpm
 RUN pnpm install
