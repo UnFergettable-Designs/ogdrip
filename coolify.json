@@ -1,0 +1,43 @@
+{
+  "coolify": {
+    "version": "1.0.0",
+    "name": "Open Graph Generator",
+    "description": "A service to generate Open Graph images and metadata",
+    "domains": ["www.og-drip.com", "og-drip.com"],
+    "builder": "docker-compose",
+    "buildCommand": "docker-compose -f docker-compose.production.yml build",
+    "startCommand": "docker-compose -f docker-compose.production.yml up -d",
+    "stopCommand": "docker-compose -f docker-compose.production.yml down",
+    "volumes": [
+      {
+        "name": "outputs",
+        "path": "/app/outputs",
+        "persistent": true
+      },
+      {
+        "name": "database",
+        "path": "/app/data",
+        "persistent": true
+      }
+    ],
+    "environmentFiles": [
+      {
+        "name": "Backend Environment",
+        "path": "./backend/.env.production"
+      },
+      {
+        "name": "Frontend Environment",
+        "path": "./frontend/.env.production"
+      }
+    ],
+    "healthCheck": {
+      "path": "/api/health",
+      "port": 8888
+    },
+    "ssl": {
+      "provider": "letsencrypt",
+      "email": "your-email@example.com",
+      "staging": false
+    }
+  }
+} 

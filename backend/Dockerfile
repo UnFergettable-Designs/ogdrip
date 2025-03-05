@@ -1,4 +1,9 @@
-FROM golang:1.20-alpine
+FROM golang:1.23-alpine
+
+# Note: This base image will be pulled from Docker Hub.
+# If you encounter authentication issues, you may need to:
+# 1. Login to Docker Hub: docker login
+# 2. Or use a local development approach without Docker (see LOCAL_DEPLOYMENT.md)
 
 # Install required dependencies
 RUN apk add --no-cache chromium ca-certificates git gcc musl-dev
@@ -15,7 +20,7 @@ WORKDIR /app
 COPY <<EOF /app/go.mod
 module og-generator
 
-go 1.20
+go 1.23
 EOF
 
 COPY <<EOF /app/main.go
@@ -40,7 +45,7 @@ func main() {
     
     http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusOK)
-        fmt.Fprintf(w, "OK")
+        fmt.Fprintf(w, "{\"success\":true,\"message\":\"Open Graph Generator API is running\"}")
     })
     
     log.Printf("Starting server on port %s", port)
@@ -53,8 +58,9 @@ EOF
 # Build the executable
 RUN go build -o og-generator .
 
-# Create output directory
+# Create output and data directories
 RUN mkdir -p /app/outputs
+RUN mkdir -p /app/data
 
 # Expose port
 EXPOSE 8888

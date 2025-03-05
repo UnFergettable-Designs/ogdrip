@@ -1,126 +1,107 @@
-# Deployment Guide for Open Graph Generator
+# Deployment Guide for OG-Drip.com on Coolify
 
-This guide explains how to deploy the Open Graph Generator application to production environments.
+This guide outlines the steps to deploy the Open Graph Generator service on Coolify.
 
-## Architecture Overview
+## Prerequisites
 
-The Open Graph Generator consists of two main components:
+- A Coolify instance
+- Domain names registered and pointed to your server (og-drip.com and www.og-drip.com)
+- Basic knowledge of Docker and Nginx
+- Go v1.23 or later (if deploying without Docker)
 
-1. **Frontend** (Astro + Svelte): The user interface for creating Open Graph cards
-2. **Backend** (Go): The API service that generates Open Graph images and metadata
+## Deployment Steps
 
-## Environment Variables
+### 1. Prepare your Environment Files
 
-### Frontend Environment Variables
+Before deploying, update your environment files with the correct values:
 
-The frontend requires the following environment variables:
+- `frontend/.env.production`: Update the Sentry DSN if you're using Sentry
+- `backend/.env.production`: Update the ADMIN_TOKEN with a secure value and Sentry DSN if applicable
 
-| Variable             | Description                    | Default                 |
-| -------------------- | ------------------------------ | ----------------------- |
-| `PUBLIC_BACKEND_URL` | URL of the backend API service | `http://localhost:8888` |
-| `PORT`               | Port for the frontend server   | `3000`                  |
+### 2. Deploy to Coolify
 
-### Backend Environment Variables
+1. Log in to your Coolify dashboard
+2. Add a new service
+3. Select "Docker Compose" as the deployment method
+4. Connect to your Git repository
+5. Choose the `docker-compose.production.yml` file for deployment
+6. Configure your domains:
+   - Primary domain: www.og-drip.com
+   - Additional domain: og-drip.com
 
-The backend requires the following environment variables:
+### 3. Configure SSL/TLS
 
-| Variable         | Description                               | Default                 |
-| ---------------- | ----------------------------------------- | ----------------------- |
-| `PORT`           | Port for the backend API server           | `8888`                  |
-| `BASE_URL`       | Public URL for accessing generated assets | `http://localhost:8888` |
-| `OUTPUT_DIR`     | Directory for storing generated files     | `outputs`               |
-| `ENABLE_CORS`    | Enable Cross-Origin Resource Sharing      | `true`                  |
-| `MAX_QUEUE_SIZE` | Maximum queue size for concurrent jobs    | `10`                    |
-| `CHROME_PATH`    | Optional path to Chrome executable        | System default          |
-| `LOG_LEVEL`      | Logging level (debug, info, warn, error)  | `info`                  |
+1. Enable "Auto SSL" in Coolify
+2. Provide your email address for Let's Encrypt notifications
+3. Wait for certificate generation
 
-## Deployment Options
+### 4. Set Up Persistent Volumes
 
-### Docker Compose (Recommended)
+1. In the Coolify dashboard, go to your service settings
+2. Add persistent volumes:
+   - Path: `/app/outputs`
+   - Path: `/app/data` (for the database)
 
-1. Copy `.env.example` to `.env` in both frontend and backend directories
-2. Update the environment variables in the `.env` files
-3. Run `docker-compose up -d`
+### 5. Configure Custom Nginx (Optional)
 
-### Manual Deployment
+If you need to use the custom Nginx configuration:
 
-#### Frontend
+1. Go to service settings > Advanced
+2. Select "Custom Nginx Configuration"
+3. Upload or paste the contents of `nginx.conf`
 
-1. Set environment variables:
+### 6. Monitor the Deployment
 
-   ```sh
-   export PUBLIC_BACKEND_URL=https://api.yourdomain.com
-   export PORT=3000
-   ```
-
-2. Build the frontend:
-
-   ```sh
-   cd frontend
-   npm install
-   npm run build
-   ```
-
-3. Start the frontend server:
-   ```sh
-   npm run start
-   ```
-
-#### Backend
-
-1. Set environment variables:
-
-   ```sh
-   export PORT=8888
-   export BASE_URL=https://api.yourdomain.com
-   export OUTPUT_DIR=outputs
-   export ENABLE_CORS=true
-   ```
-
-2. Build the backend:
-
-   ```sh
-   cd backend
-   go build -o og-service
-   ```
-
-3. Start the backend service:
-   ```sh
-   ./og-service
-   ```
-
-## Cloud Deployment
-
-### Vercel (Frontend)
-
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables in the Vercel dashboard
-3. Deploy the frontend
-
-### Fly.io (Backend)
-
-1. Install the Fly.io CLI
-2. Create a `fly.toml` file in the backend directory
-3. Configure secrets:
-   ```sh
-   fly secrets set BASE_URL=https://api.yourdomain.com
-   fly secrets set OUTPUT_DIR=/app/outputs
-   fly secrets set ENABLE_CORS=true
-   ```
-4. Deploy the backend:
-   ```sh
-   fly deploy
-   ```
+1. Check the deployment logs for any errors
+2. Verify your site is accessible at https://www.og-drip.com
+3. Test the API with a basic request to https://www.og-drip.com/api/health
 
 ## Troubleshooting
 
-- If the frontend cannot connect to the backend, check that:
+### CORS Issues
 
-  - The `PUBLIC_BACKEND_URL` is set correctly
-  - CORS is enabled on the backend
-  - Network access is allowed between frontend and backend
+If you encounter CORS issues:
 
-- If image generation fails, check that:
-  - Chrome is installed and accessible
-  - The `OUTPUT_DIR` is writable
-  - The backend has sufficient memory and CPU resources
+1. Verify the `ENABLE_CORS` environment variable is set to `true`
+2. Check that the `BASE_URL` is set correctly to `https://www.og-drip.com`
+
+### Certificate Issues
+
+If you have SSL/TLS certificate issues:
+
+1. Ensure your DNS records are properly configured
+2. Check that both domains are registered in Coolify
+3. Verify that ports 80 and 443 are accessible
+
+### Volume Permissions
+
+If you have issues with file permissions:
+
+1. SSH into your Coolify server
+2. Check the permissions on the volume directories
+3. Run: `chmod -R 755 /path/to/volumes/outputs`
+
+## Maintenance
+
+### Backups
+
+1. Set up a regular backup schedule for your database and generated files
+2. The critical paths to back up are:
+   - `/app/data` - Database files
+   - `/app/outputs` - Generated images and HTML files
+
+### Updates
+
+When updating your application:
+
+1. Make your changes to the codebase
+2. Push to your repository
+3. Redeploy through the Coolify dashboard
+
+## Monitoring
+
+Monitor your application health:
+
+1. Set up regular checks to `/api/health` endpoint
+2. Consider setting up alerts if the health check fails
+3. Monitor disk space on the volumes to ensure you don't run out of space

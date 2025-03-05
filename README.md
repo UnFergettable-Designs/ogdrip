@@ -1,87 +1,98 @@
-# ogdrip
+# Open Graph Generator
 
-Social presence that drips with style. A powerful Open Graph image and metadata generator for enhancing your content's appearance on social platforms.
+A powerful tool for generating Open Graph images and meta tags for your websites and applications.
 
 ## Features
 
-- Generate Open Graph images from websites or custom content
-- Create comprehensive meta tags for social media sharing
-- Preview how content will look on different platforms
-- API service for integration with other applications
+- Generate beautiful Open Graph images from URLs
+- Create meta tags for social media sharing
+- Customize titles, descriptions, and visual elements
+- Admin dashboard for tracking generations
+- API for integration with your applications
+- Downloadable assets (images, HTML, and ZIP packages)
 
-## Project Structure
+## Quick Start
 
-This is a monorepo with the following components:
-
-- **Frontend**: Astro + Svelte 5 application with Deno runtime
-- **Backend**: Go service with ChromeDP for screenshot and image generation
-- **Shared**: Shared TypeScript types and utilities
-
-## Running with Docker
-
-The easiest way to run the application is with Docker Compose:
+The quickest way to get started is to use Docker Compose:
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/open-graph-generate.git
-cd open-graph-generate
-
-# Start the application with Docker Compose
-docker-compose up -d
+git clone https://github.com/your-username/ogdrip.git
+cd ogdrip
+docker compose up
 ```
 
-The application will be available at:
+Then visit http://localhost:3000 in your browser.
 
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8888
+## Requirements
 
-## Development Setup
+- Docker and Docker Compose (for containerized setup)
+- Go v1.23 or later (for manual backend setup)
+- Node.js v18 or later (for manual frontend setup)
+- pnpm (for manual frontend setup)
+- Chrome/Chromium (for headless browser functionality)
 
-### Prerequisites
+## Documentation
 
-- [Deno](https://deno.land/) 1.39 or higher
-- [Go](https://golang.org/) 1.23 or higher
-- [Node.js](https://nodejs.org/) (optional, for npm packages)
+- [Local Deployment Guide](LOCAL_DEPLOYMENT.md) - How to run the application locally
+- [Production Deployment Guide](DEPLOYMENT.md) - How to deploy to production environments
 
-### Running Locally
+## Architecture
+
+The Open Graph Generator consists of two main components:
+
+1. **Frontend**: Built with Astro and Svelte
+
+   - User interface for creating Open Graph assets
+   - Preview functionality
+   - Admin dashboard
+
+2. **Backend**: Built with Go
+   - API for generating Open Graph images
+   - Headless Chrome integration for rendering
+   - SQLite database for tracking generations
+
+## API Usage
+
+### Generate Open Graph Assets
 
 ```bash
-# Start both frontend and backend
-deno task dev
-
-# Or start them separately
-deno task dev:frontend
-deno task dev:backend
+curl -X POST \
+  -F "url=https://example.com" \
+  -F "title=Example Title" \
+  -F "description=Example Description" \
+  http://localhost:8888/api/generate
 ```
 
-## Deployment on Coolify
+Response:
 
-This application is designed to work well with Coolify:
+```json
+{
+  "success": true,
+  "message": "Open Graph assets generated successfully",
+  "image_url": "http://localhost:8888/outputs/abc123_og_image.png",
+  "meta_tags_url": "http://localhost:8888/outputs/abc123_og_meta.html",
+  "preview_url": "http://localhost:8888/preview/abc123",
+  "zip_url": "http://localhost:8888/api/download/abc123_og_package.zip",
+  "id": "abc123"
+}
+```
 
-1. Connect your Git repository to Coolify
-2. Choose "Docker Compose" as the deployment method
-3. Use the docker-compose.yml from the repository
-4. Configure the following environment variables:
-   - `BASE_URL`: The public URL where your application will be hosted
-   - `ENABLE_CORS`: Set to `true` if needed
-   - `OUTPUT_DIR`: Directory for storing generated images
+## Contributing
 
-## Configuration
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Environment Variables
-
-- Frontend
-
-  - `BACKEND_URL`: URL of the backend API (default: http://localhost:8888)
-  - `PORT`: Port for the frontend server (default: 3000)
-
-- Backend
-  - `PORT`: Port for the backend server (default: 8888)
-  - `BASE_URL`: Public URL for the backend API
-  - `OUTPUT_DIR`: Directory for storing generated images
-  - `ENABLE_CORS`: Whether to enable CORS (default: true)
-  - `MAX_QUEUE_SIZE`: Maximum number of concurrent tasks (default: 10)
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-[MIT License](LICENSE)
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [Chromedp](https://github.com/chromedp/chromedp) for headless browser automation
+- [Astro](https://astro.build/) for the frontend framework
+- [Svelte](https://svelte.dev/) for reactive UI components
