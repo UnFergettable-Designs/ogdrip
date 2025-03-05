@@ -1,5 +1,5 @@
 services:
-  # Frontend service (Astro+Svelte with Node.js + PNPM)
+  # Frontend service (Astro+Svelte static site with Node.js serve)
   frontend:
     build:
       context: ./frontend
@@ -10,14 +10,13 @@ services:
       - BACKEND_URL=https://www.og-drip.com
       - PUBLIC_BACKEND_URL=https://www.og-drip.com
       - NODE_ENV=production
-      - SVELTE_FORCE_COMPILE=true
       - ASTRO_TELEMETRY_DISABLED=1
     depends_on:
       - backend
     restart: unless-stopped
     volumes:
-      - outputs:/app/public/outputs
-      - ./frontend/public/images:/app/public/images
+      - outputs:/app/dist/outputs
+      - ./frontend/public/images:/app/dist/images
 
   # Backend service (Go with ChromeDP)
   backend:
@@ -31,6 +30,7 @@ services:
       - BASE_URL=https://www.og-drip.com
       - ENABLE_CORS=true
       - OUTPUT_DIR=/app/outputs
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-admin}
     volumes:
       - outputs:/app/outputs
     restart: unless-stopped

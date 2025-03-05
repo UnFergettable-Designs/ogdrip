@@ -44,8 +44,9 @@ func main() {
     })
     
     http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusOK)
-        fmt.Fprintf(w, "{\"success\":true,\"message\":\"Open Graph Generator API is running\"}")
+        fmt.Fprintf(w, `{"success":true,"message":"Open Graph Generator API is running"}`)
     })
     
     log.Printf("Starting server on port %s", port)
