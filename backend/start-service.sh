@@ -1,14 +1,19 @@
 #!/bin/bash
 
-# Load environment variables from .env file
-if [ -f .env ]; then
-  export $(grep -v '^#' .env | xargs)
-  echo "Loaded environment variables:"
-  echo "PORT=$PORT"
-  echo "ENABLE_CORS=$ENABLE_CORS"
-  echo "BASE_URL=$BASE_URL"
-  echo "OUTPUT_DIR=$OUTPUT_DIR"
-fi
+# Set API service environment variable
+export OG_API_SERVICE=true
 
-# Start the backend service
-go run main.go server.go service.go -service 
+# Set port (default 8888)
+export PORT=8888
+
+# Base URL for responses
+export BASE_URL=http://localhost:8888
+
+# Log level (debug, info, warn, error)
+export LOG_LEVEL=debug
+
+# Build the application with all .go files
+go build -o og-generator *.go
+
+# Run the service
+./og-generator -service 

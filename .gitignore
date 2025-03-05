@@ -74,3 +74,5 @@ deno.lock
 # Project specific
 backend/outputs/
 backend/og-generator
+backend/data/
+*.db

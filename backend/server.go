@@ -3,20 +3,35 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/json"
 	"flag"
 	"fmt"
-	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
+	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
+	"github.com/chromedp/cdproto/emulation"
+	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
+	"github.com/getsentry/sentry-go"
+	"github.com/google/uuid"
+	"github.com/rs/cors"
 )
+
+// Database instance
+var db *Database
 
 // OpenGraphData represents the data needed for Open Graph meta tags
 type OpenGraphData struct {
@@ -164,6 +179,71 @@ func startLocalServer(htmlContent string, imagePath string, port string) string 
 	return serverURL
 }
 
+// startCleanupScheduler initiates a goroutine that periodically runs the database cleanup job
+func startCleanupScheduler(db *Database, interval time.Duration) {
+	if db == nil {
+		log.Printf("Warning: Cannot start cleanup scheduler - database not initialized")
+		return
+	}
+
+	log.Printf("Starting automated cleanup scheduler with interval: %v", interval)
+
+	go func() {
+		// Run immediately on startup
+		if err := db.RunCleanup(); err != nil {
+			log.Printf("Error during initial cleanup: %v", err)
+		} else {
+			log.Printf("Initial cleanup completed successfully")
+		}
+
+		// Then run on the specified interval
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				log.Printf("Running scheduled cleanup...")
+				if err := db.RunCleanup(); err != nil {
+					log.Printf("Error during scheduled cleanup: %v", err)
+				} else {
+					log.Printf("Scheduled cleanup completed successfully")
+				}
+			}
+		}
+	}()
+}
+
+// Initialize global variables for service
+func initService() {
+	var err error
+
+	// Initialize database if not already done
+	db, err = InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
+	// Initialize Sentry if DSN is provided
+	sentryDSN := os.Getenv("SENTRY_DSN")
+	if sentryDSN != "" {
+		err = sentry.Init(sentry.ClientOptions{
+			Dsn:              sentryDSN,
+			AttachStacktrace: true,
+			Environment:      os.Getenv("ENVIRONMENT"),
+			Release:          os.Getenv("RELEASE"),
+		})
+		if err != nil {
+			log.Printf("Warning: Failed to initialize Sentry: %v", err)
+		} else {
+			log.Println("Sentry initialized successfully")
+		}
+	}
+
+	// Start cleanup scheduler to run every hour
+	startCleanupScheduler(db, 1*time.Hour)
+}
+
 // ServerMain is the entry point for the OG generator functionality
 func ServerMain() {
 	// First check if API service mode is active
@@ -251,6 +331,16 @@ func ServerMain() {
 
 	// Log the paths we're using
 	log.Printf("Using output paths: Image=%s, HTML=%s", absOutputPath, absHTMLPath)
+
+	// Initialize the database
+	db, err := InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer db.CloseDB()
+
+	// Start the cleanup scheduler to run every hour
+	startCleanupScheduler(db, 1*time.Hour)
 
 	// Generate image if a URL is provided
 	if *webpageURL != "" {

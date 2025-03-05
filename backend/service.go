@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +14,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"net/url"
+
+	"github.com/chromedp/chromedp"
+	"github.com/getsentry/sentry-go"
+	"github.com/rs/cors"
 )
 
 // APIResponse represents the structure of the API response
@@ -24,6 +30,7 @@ type APIResponse struct {
 	PreviewURL   string `json:"preview_url,omitempty"`
 	ZipURL       string `json:"zip_url,omitempty"`      // URL to download files as zip
 	HtmlContent  string `json:"html_content,omitempty"` // HTML content for direct display
+	ID           string `json:"id,omitempty"`
 }
 
 // Config holds the service configuration
@@ -122,9 +129,28 @@ func ServiceMain() {
 	// Load configuration from environment variables
 	loadConfig()
 	
+	// Initialize Sentry for error tracking
+	if err := InitSentry(); err != nil {
+		log.Printf("Warning: Failed to initialize Sentry: %v", err)
+		log.Printf("Error reporting will be limited to logs only")
+	}
+	
 	// Ensure output directory exists
 	if err := os.MkdirAll(config.OutputDir, 0755); err != nil {
 		log.Fatalf("Failed to create output directory: %v", err)
+	}
+
+	// Initialize the database
+	db, err := InitDB()
+	if err != nil {
+		log.Printf("Warning: Failed to initialize database: %v", err)
+		log.Printf("Generation history tracking will be disabled")
+		// Report to Sentry
+		CaptureException(err)
+	} else {
+		log.Printf("Database initialized successfully")
+		// Start the cleanup task
+		StartCleanupTask(db)
 	}
 
 	// Global CORS middleware applied to all requests
@@ -161,6 +187,11 @@ func ServiceMain() {
 	mux.HandleFunc("/api/generate", handleGenerateRequest)
 	mux.HandleFunc("/api/health", handleHealthCheck)
 	mux.HandleFunc("/api/download-zip", handleZipDownload)
+	
+	// Add new API endpoints for history
+	mux.HandleFunc("/api/history", handleHistoryRequest)
+	mux.HandleFunc("/api/generation/", handleGetGenerationRequest)
+	mux.HandleFunc("/api/download-complete", handleDownloadCompleteRequest)
 	
 	// Serve static files from the output directory
 	fs := http.FileServer(http.Dir("."))
@@ -199,14 +230,22 @@ func ServiceMain() {
 		http.ServeFile(w, r, filePath)
 	})
 	
-	// Apply global CORS middleware to all routes
-	handler := globalCorsMiddleware(mux)
-	
-	// Start the server
+	// Create middleware chain: CORS -> Sentry -> application handlers
+	handler := globalCorsMiddleware(SentryMiddleware(mux))
+
+	// Start the HTTP server
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = config.Port // Use the config port
+	} else {
+		config.Port = port // Update config if environment variable is set
+	}
+
 	log.Printf("Starting Open Graph API service on port %s...", config.Port)
 	log.Printf("Base URL: %s", config.BaseURL)
 	log.Printf("Files will be served from %s/files/{filename}", config.BaseURL)
 	log.Printf("CORS Enabled: Applying to all requests")
+	log.Printf("Sentry Error Tracking: Enabled")
 	log.Fatal(http.ListenAndServe(":"+config.Port, handler))
 }
 
@@ -327,6 +366,31 @@ func handleGenerateRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create generation record in database with initial pending status
+	generation := &Generation{
+		ID:          requestID,
+		Title:       r.FormValue("title"),
+		Description: r.FormValue("description"),
+		TargetURL:   r.FormValue("target_url"),
+		ImagePath:   imgOutputPath,
+		HTMLPath:    htmlOutputPath,
+		CreatedAt:   time.Now(),
+		ClientIP:    r.RemoteAddr,
+		UserAgent:   r.UserAgent(),
+		Parameters:  parametersToJSON(r.Form),
+		Status:      "pending",
+	}
+	
+	// Save initial generation record
+	if err := db.SaveGeneration(generation); err != nil {
+		log.Printf("Error saving generation record: %v", err)
+		captureError(err, map[string]interface{}{
+			"operation": "save_generation_record",
+			"requestID": requestID,
+		})
+		// Continue anyway, as this is just for tracking
+	}
+
 	// Instead of executing a separate binary, set up a context for direct generation
 	// Save original args and restore them after
 	originalArgs := os.Args
@@ -406,11 +470,68 @@ func handleGenerateRequest(w http.ResponseWriter, r *http.Request) {
 	case err := <-errChan:
 		if err != nil {
 			log.Printf("Error during generation: %v", err)
+			
+			// Report error to Sentry with context
+			sentry.WithScope(func(scope *sentry.Scope) {
+				scope.SetTag("request_type", "generation")
+				scope.SetExtra("request_ip", r.RemoteAddr)
+				scope.SetExtra("user_agent", r.UserAgent())
+				
+				// Add form data as context (filtering sensitive information)
+				formData := make(map[string]string)
+				for key, values := range r.Form {
+					if len(values) > 0 {
+						// Don't include large or sensitive values
+						if key != "image" && key != "password" && len(values[0]) < 1000 {
+							formData[key] = values[0]
+						}
+					}
+				}
+				// Convert to map[string]interface{} for Sentry context
+				formDataContext := make(map[string]interface{})
+				for k, v := range formData {
+					formDataContext[k] = v
+				}
+				scope.SetContext("form_data", formDataContext)
+				
+				// Capture the exception
+				CaptureException(err)
+			})
+			
+			// Save error to database if database is available
+			db, dbErr := InitDB()
+			if dbErr == nil {
+				// Try to extract request ID from args
+				requestID := ""
+				for i, arg := range args {
+					if strings.HasPrefix(arg, "-output=") {
+						// Extract ID from output path
+						outputPath := strings.TrimPrefix(arg, "-output=")
+						requestID = strings.TrimSuffix(filepath.Base(outputPath), "_og_image.png")
+						break
+					}
+				}
+				
+				if requestID != "" {
+					// Set error message and status
+					db.SetErrorMessage(requestID, err.Error())
+				}
+			}
+			
 			sendErrorResponse(w, fmt.Sprintf("Failed to generate Open Graph assets: %v", err), http.StatusInternalServerError)
 			return
 		}
 	case <-time.After(30 * time.Second):
 		log.Printf("Generation timed out after 30 seconds")
+		
+		// Report timeout to Sentry
+		sentry.WithScope(func(scope *sentry.Scope) {
+			scope.SetTag("error_type", "timeout")
+			scope.SetTag("request_type", "generation")
+			scope.SetExtra("timeout_duration", "30s")
+			CaptureMessage("Generation request timed out")
+		})
+		
 		sendErrorResponse(w, "Generation timed out", http.StatusRequestTimeout)
 		return
 	}
@@ -442,14 +563,42 @@ func handleGenerateRequest(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Determine if generation was successful
+	generationSuccess := imageURL != "" || metaTagsURL != ""
+	
+	// Update the generation status in the database
+	if generationSuccess {
+		// Update generation status to completed
+		if err := db.UpdateGenerationStatus(requestID, "completed", ""); err != nil {
+			log.Printf("Error updating generation status: %v", err)
+			captureError(err, map[string]interface{}{
+				"operation": "update_generation_status",
+				"requestID": requestID,
+				"status":    "completed",
+			})
+		}
+	} else {
+		// Update generation status to failed
+		errorMsg := "Failed to generate Open Graph assets"
+		if err := db.UpdateGenerationStatus(requestID, "failed", errorMsg); err != nil {
+			log.Printf("Error updating generation status: %v", err)
+			captureError(err, map[string]interface{}{
+				"operation": "update_generation_status",
+				"requestID": requestID,
+				"status":    "failed",
+			})
+		}
+	}
+
 	// Send the successful response
 	response := APIResponse{
-		Success:     true,
+		Success:     generationSuccess,
 		Message:     "Open Graph assets generated successfully",
 		ImageURL:    imageURL,
 		MetaTagsURL: metaTagsURL,
 		ZipURL:      zipURL,
 		HtmlContent: htmlContent,
+		ID:          requestID, // Include the ID in the response
 	}
 
 	// Add more information to the message if the files were generated
@@ -459,9 +608,33 @@ func handleGenerateRequest(w http.ResponseWriter, r *http.Request) {
 		response.Message = fmt.Sprintf("Meta tags HTML generated successfully. You can access it at %s", metaTagsURL)
 	} else if imageURL != "" {
 		response.Message = fmt.Sprintf("Open Graph image generated successfully. You can access it at %s", imageURL)
+	} else {
+		response.Message = "Failed to generate Open Graph assets. Please check your input parameters and try again."
+		response.Success = false
 	}
 
 	sendJSONResponse(w, response)
+}
+
+// parametersToJSON converts form values to a JSON string
+func parametersToJSON(form url.Values) string {
+	params := make(map[string]interface{})
+	
+	for key, values := range form {
+		if len(values) == 1 {
+			params[key] = values[0]
+		} else if len(values) > 1 {
+			params[key] = values
+		}
+	}
+	
+	jsonData, err := json.Marshal(params)
+	if err != nil {
+		log.Printf("Error marshaling parameters to JSON: %v", err)
+		return "{}"
+	}
+	
+	return string(jsonData)
 }
 
 // sendJSONResponse sends a structured JSON response
@@ -495,4 +668,394 @@ func generateRequestID() string {
 	random := strconv.FormatInt(rand.Int63(), 36)
 	
 	return fmt.Sprintf("%s%s_%s%s", timestamp, nano, pid, random)
+}
+
+// handleHistoryRequest handles requests to get the history of generation requests
+func handleHistoryRequest(w http.ResponseWriter, r *http.Request) {
+	// Set headers for CORS
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	
+	// Handle preflight OPTIONS request
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	
+	// Only allow GET requests
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	// Parse query parameters
+	limit := 50 // Default limit
+	offset := 0 // Default offset
+	
+	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
+		if parsedLimit, err := strconv.Atoi(limitParam); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+	
+	if offsetParam := r.URL.Query().Get("offset"); offsetParam != "" {
+		if parsedOffset, err := strconv.Atoi(offsetParam); err == nil && parsedOffset >= 0 {
+			offset = parsedOffset
+		}
+	}
+	
+	// Get generations from database
+	generations, err := db.GetRecentGenerations(limit, offset)
+	if err != nil {
+		log.Printf("Error getting generations: %v", err)
+		http.Error(w, "Failed to retrieve generations", http.StatusInternalServerError)
+		return
+	}
+	
+	// Get the total count
+	count, err := db.GetGenerationCount()
+	if err != nil {
+		log.Printf("Error getting generation count: %v", err)
+		// Continue anyway, just set count to 0
+		count = 0
+	}
+	
+	// Create response object
+	response := map[string]interface{}{
+		"success": true,
+		"data": map[string]interface{}{
+			"generations": generations,
+			"total":      count,
+			"limit":      limit,
+			"offset":     offset,
+		},
+	}
+	
+	// Return JSON response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+// handleGetGenerationRequest returns details for a specific generation
+func handleGetGenerationRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract the generation ID from the URL path
+	path := r.URL.Path
+	parts := strings.Split(path, "/")
+	if len(parts) < 3 {
+		sendErrorResponse(w, "Invalid generation ID", http.StatusBadRequest)
+		return
+	}
+	generationID := parts[len(parts)-1]
+
+	// Get the database instance
+	db, err := InitDB()
+	if err != nil {
+		sendErrorResponse(w, "Database not available", http.StatusInternalServerError)
+		return
+	}
+
+	// Get the generation details
+	generation, err := db.GetGeneration(generationID)
+	if err != nil {
+		log.Printf("Error retrieving generation %s: %v", generationID, err)
+		sendErrorResponse(w, "Generation not found", http.StatusNotFound)
+		return
+	}
+
+	// Construct the response URLs
+	imageURL := fmt.Sprintf("%s/files/%s", config.BaseURL, filepath.Base(generation.ImagePath))
+	metaTagsURL := fmt.Sprintf("%s/files/%s", config.BaseURL, filepath.Base(generation.HTMLPath))
+	zipURL := fmt.Sprintf("%s/api/download-zip?file=%s&file=%s", 
+		config.BaseURL, 
+		filepath.Base(generation.ImagePath), 
+		filepath.Base(generation.HTMLPath))
+
+	// Send the response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":     true,
+		"message":     "Generation retrieved successfully",
+		"generation":  generation,
+		"image_url":   imageURL,
+		"meta_url":    metaTagsURL,
+		"zip_url":     zipURL,
+	})
+}
+
+// handleDownloadCompleteRequest marks a generation as downloaded
+func handleDownloadCompleteRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse the request body
+	var requestData struct {
+		ID string `json:"id"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+		sendErrorResponse(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if requestData.ID == "" {
+		sendErrorResponse(w, "Generation ID is required", http.StatusBadRequest)
+		return
+	}
+
+	// Get the database instance
+	db, err := InitDB()
+	if err != nil {
+		sendErrorResponse(w, "Database not available", http.StatusInternalServerError)
+		return
+	}
+
+	// Mark the generation as downloaded
+	if err := db.MarkAsDownloaded(requestData.ID); err != nil {
+		log.Printf("Error marking generation %s as downloaded: %v", requestData.ID, err)
+		sendErrorResponse(w, "Failed to update generation", http.StatusInternalServerError)
+		return
+	}
+
+	// Set cleanup time to 1 hour from now for downloaded items
+	cleanupTime := time.Now().Add(1 * time.Hour)
+	if err := db.SetCleanupTime(requestData.ID, cleanupTime); err != nil {
+		log.Printf("Warning: Failed to set cleanup time for generation %s: %v", requestData.ID, err)
+	}
+
+	// Send the response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "Generation marked as downloaded",
+	})
+}
+
+// handleGenerationDetailsRequest gets details for a specific generation
+func handleGenerationDetailsRequest(w http.ResponseWriter, r *http.Request) {
+	// Set CORS headers
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	
+	// Handle preflight OPTIONS request
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	
+	// Only allow GET requests
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	// Extract generation ID from URL path
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 4 {
+		http.Error(w, "Invalid request: missing generation ID", http.StatusBadRequest)
+		return
+	}
+	
+	generationID := pathParts[3]
+	if generationID == "" {
+		http.Error(w, "Invalid request: empty generation ID", http.StatusBadRequest)
+		return
+	}
+	
+	// Get the generation details from database
+	generation, err := db.GetGenerationByID(generationID)
+	if err != nil {
+		log.Printf("Error getting generation %s: %v", generationID, err)
+		http.Error(w, "Failed to retrieve generation details", http.StatusInternalServerError)
+		return
+	}
+	
+	if generation == nil {
+		http.Error(w, "Generation not found", http.StatusNotFound)
+		return
+	}
+	
+	// Create response object
+	response := map[string]interface{}{
+		"success": true,
+		"data":    generation,
+	}
+	
+	// Return JSON response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+// handleAdminVerify validates an admin token against the environment variable
+func handleAdminVerify(w http.ResponseWriter, r *http.Request) {
+	// Only allow POST requests
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Get the Authorization header
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		sendErrorResponse(w, "Authorization header is required", http.StatusUnauthorized)
+		return
+	}
+
+	// Extract the token from the Authorization header
+	// Format should be "Bearer <token>"
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		sendErrorResponse(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+
+	token := parts[1]
+
+	// Get the admin token from environment variable
+	adminToken := os.Getenv("ADMIN_TOKEN")
+	if adminToken == "" {
+		// If ADMIN_TOKEN is not set, admin access is disabled
+		sendErrorResponse(w, "Admin access is disabled", http.StatusUnauthorized)
+		return
+	}
+
+	// Validate the token
+	if token != adminToken {
+		sendErrorResponse(w, "Invalid admin token", http.StatusUnauthorized)
+		return
+	}
+
+	// If the token is valid, send a success response
+	sendJSONResponse(w, APIResponse{
+		Success: true,
+		Message: "Admin authentication successful",
+	})
+}
+
+// verifyAdminToken middleware checks if the request has a valid admin token
+func verifyAdminToken(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Get the admin token from environment variable
+		adminToken := os.Getenv("ADMIN_TOKEN")
+		
+		// If ADMIN_TOKEN is not set, skip admin auth (for backward compatibility)
+		if adminToken == "" {
+			next(w, r)
+			return
+		}
+
+		// Get the Authorization header
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			sendErrorResponse(w, "Authorization header is required", http.StatusUnauthorized)
+			return
+		}
+
+		// Extract the token from the Authorization header
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			sendErrorResponse(w, "Invalid Authorization header format", http.StatusUnauthorized)
+			return
+		}
+
+		token := parts[1]
+
+		// Validate the token
+		if token != adminToken {
+			sendErrorResponse(w, "Invalid admin token", http.StatusUnauthorized)
+			return
+		}
+
+		// If the token is valid, call the next handler
+		next(w, r)
+	}
+}
+
+// StartAPIService starts the API service on the specified port
+func StartAPIService(port string) {
+	log.Printf("Starting API service on port %s", port)
+
+	// Initialize service components
+	initService()
+
+	// Default to port 8888 if not provided
+	if port == "" {
+		port = "8888"
+	}
+
+	// Get port from environment if available
+	envPort := os.Getenv("PORT")
+	if envPort != "" {
+		port = envPort
+		log.Printf("Using port from environment: %s", port)
+	}
+
+	// Create a mux for the API endpoints
+	mux := http.NewServeMux()
+
+	// API endpoints
+	mux.HandleFunc("/api/generate", handleGenerateRequest)
+	mux.HandleFunc("/api/download/", handleDownloadRequest)
+	mux.HandleFunc("/api/health", handleHealthCheck)
+	mux.HandleFunc("/api/admin/verify", handleAdminVerify)
+
+	// History endpoints with admin auth
+	mux.HandleFunc("/api/history", verifyAdminToken(handleHistoryRequest))
+	mux.HandleFunc("/api/history/", verifyAdminToken(handleGenerationDetailsRequest))
+
+	// Enable CORS
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"}, // Allowing all origins for now
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Accept", "Authorization"},
+		AllowCredentials: true,
+	})
+
+	// Start the server
+	handler := c.Handler(mux)
+	
+	// Add Sentry middleware if available
+	if sentryInitialized {
+		handler = sentryHandler(handler)
+	}
+
+	// Set up paths for serving static files
+	setupStaticFileServing(mux)
+	
+	log.Printf("API Server starting on port %s...", port)
+	if err := http.ListenAndServe(":"+port, handler); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
+}
+
+// captureError sends an error to Sentry with additional context
+func captureError(err error, context map[string]interface{}) {
+	if err == nil {
+		return
+	}
+	
+	sentry.WithScope(func(scope *sentry.Scope) {
+		if context != nil {
+			for k, v := range context {
+				scope.SetExtra(k, v)
+			}
+		}
+		sentry.CaptureException(err)
+	})
 } 

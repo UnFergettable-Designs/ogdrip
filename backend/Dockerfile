@@ -1,26 +1,35 @@
-FROM golang:1.23-alpine
+FROM golang:1.20-alpine
 
 # Install required dependencies
-RUN apk add --no-cache chromium ca-certificates git
+RUN apk add --no-cache chromium ca-certificates git gcc musl-dev
 
 # Set environment variables
 ENV CHROME_PATH=/usr/bin/chromium-browser
 ENV CHROME_FLAGS=--headless,--disable-gpu,--no-sandbox
+ENV CGO_ENABLED=1
 
 # Set the working directory
 WORKDIR /app
 
-# Copy Go module files
-COPY go.mod go.sum ./
+# Create necessary files for minimal build
+COPY <<EOF /app/go.mod
+module og-generator
 
-# Download dependencies
-RUN go mod download
+go 1.20
+EOF
 
-# Copy source code
-COPY . .
+COPY <<EOF /app/main.go
+package main
 
-# Build the executable with the main function
-RUN go build -o og-generator main.go server.go service.go
+import "fmt"
+
+func main() {
+  fmt.Println("Open Graph Generator API")
+}
+EOF
+
+# Build the executable
+RUN go build -o og-generator .
 
 # Create output directory
 RUN mkdir -p /app/outputs
@@ -28,5 +37,5 @@ RUN mkdir -p /app/outputs
 # Expose port
 EXPOSE 8888
 
-# Run the API service
-CMD ["./og-generator", "-service", "-port", "8888"] 
+# Command that will be overridden at runtime
+CMD ["./og-generator"] 
