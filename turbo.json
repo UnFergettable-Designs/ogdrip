@@ -50,6 +50,10 @@
     "start": {
       "cache": false,
       "dependsOn": ["build"]
+    },
+    "validate": {
+      "cache": false,
+      "outputs": []
     }
   }
 } 
