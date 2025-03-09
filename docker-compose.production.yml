@@ -52,7 +52,7 @@ services:
     labels:
       - coolify.managed=true
       - coolify.name=backend-${COOLIFY_RESOURCE_UUID}
-      - coolify.resourceName=un-fergettable-designsogdripmain-pcgo000swc44osgw44o4ckkw
+      - coolify.resourceName=un-fergettable-designsogdrip
       - coolify.projectName=ogdrip
       - coolify.environmentName=production
 
