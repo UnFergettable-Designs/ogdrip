@@ -23,8 +23,14 @@ RUN go mod download
 # Copy source code (all Go files, not just *.go)
 COPY . .
 
-# Build with CGO enabled for chromedp
-RUN CGO_ENABLED=1 GOOS=linux go build -v -o /app/ogdrip-backend
+# Debug - list files to ensure they're copied
+RUN ls -la
+
+# Build with CGO enabled for chromedp - with explicit architecture flags
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -v -o ogdrip-backend
+
+# Verify the binary exists and is executable
+RUN ls -la ogdrip-backend && chmod +x ogdrip-backend && file ogdrip-backend
 
 # Production image
 FROM debian:bookworm-slim
@@ -34,10 +40,14 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     chromium \
+    file \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binary from builder
-COPY --from=builder /app/ogdrip-backend .
+COPY --from=builder /app/ogdrip-backend ./ogdrip-backend
+
+# Verify the binary was copied correctly
+RUN ls -la && file ./ogdrip-backend && chmod +x ./ogdrip-backend
 
 # Create output directory
 RUN mkdir -p /app/outputs
@@ -51,4 +61,4 @@ ENV PORT=8888
 EXPOSE 8888
 
 # Run backend
-CMD ["/app/ogdrip-backend", "-service"]
+CMD ["./ogdrip-backend", "-service"]
