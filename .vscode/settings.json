@@ -36,7 +36,7 @@
   "eslint.validate": ["javascript", "typescript", "astro", "svelte"],
 
   // TypeScript settings
-  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.tsdk": "",
   "typescript.enablePromptUseWorkspaceTsdk": true,
 
   // Go settings
