@@ -5,18 +5,26 @@ services:
       context: .
       dockerfile: frontend/Dockerfile.production
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
-      - BACKEND_URL=https://www.og-drip.com
-      - PUBLIC_BACKEND_URL=https://www.og-drip.com
+      - BACKEND_URL=https://api.og-drip.com
+      - PUBLIC_BACKEND_URL=https://api.og-drip.com
       - NODE_ENV=production
       - ASTRO_TELEMETRY_DISABLED=1
+      - COOLIFY_URL=https://og-drip.com,https://www.og-drip.com
+      - COOLIFY_FQDN=og-drip.com,www.og-drip.com
     depends_on:
       - backend
     restart: unless-stopped
     volumes:
       - outputs:/app/dist/outputs
       - ./frontend/public/images:/app/dist/images
+    labels:
+      - coolify.managed=true
+      - coolify.name=frontend-${COOLIFY_RESOURCE_UUID}
+      - coolify.resourceName=un-fergettable-designsogdrip
+      - coolify.projectName=ogdrip
+      - coolify.environmentName=production
 
   # Backend service (Go with ChromeDP)
   backend:
@@ -24,21 +32,29 @@ services:
       context: ./backend
       dockerfile: Dockerfile.production
     ports:
-      - "8888:8888"
+      - '8888:8888'
     environment:
       - PORT=8888
-      - BASE_URL=https://www.og-drip.com
+      - BASE_URL=https://api.og-drip.com
       - ENABLE_CORS=true
+      - CORS_ORIGINS=https://og-drip.com,https://www.og-drip.com
       - OUTPUT_DIR=/app/outputs
       - ADMIN_TOKEN=${ADMIN_TOKEN:-admin}
+      - COOLIFY_URL=https://api.og-drip.com
+      - COOLIFY_FQDN=api.og-drip.com
+      - SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+      - SSL_CERT_DIR=/etc/ssl/certs
     volumes:
       - outputs:/app/outputs
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: "2"
-          memory: 2G
+    mem_limit: 2G
+    cpu_shares: 2048
+    labels:
+      - coolify.managed=true
+      - coolify.name=backend-${COOLIFY_RESOURCE_UUID}
+      - coolify.resourceName=un-fergettable-designsogdripmain-pcgo000swc44osgw44o4ckkw
+      - coolify.projectName=ogdrip
+      - coolify.environmentName=production
 
 volumes:
   outputs:
