@@ -2,15 +2,20 @@ FROM debian:bookworm-slim
 
 WORKDIR /app
 
-# Install dependencies first (including golang)
+# Install dependencies first (without golang from apt)
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     chromium \
     file \
-    golang \
     build-essential \
     git \
+    wget \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Go 1.21 manually
+RUN wget https://go.dev/dl/go1.24.1.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.24.1.linux-amd64.tar.gz && \
+    rm go1.24.1.linux-amd64.tar.gz
 
 # Explicitly set certificate locations for Go
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
