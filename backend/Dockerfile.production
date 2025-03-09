@@ -1,53 +1,41 @@
-FROM golang:1.23-alpine AS builder
+FROM debian:bookworm-slim
+
 WORKDIR /app
 
-# Install updated CA certificates and SSL libraries
-RUN apk update && \
-    apk add --no-cache \
-    chromium \
+# Install dependencies first (including golang)
+RUN apt-get update && apt-get install -y \
     ca-certificates \
-    openssl \
-    gcc \
-    musl-dev \
+    chromium \
+    file \
+    golang \
+    build-essential \
     git \
-    && update-ca-certificates 2>/dev/null || true
+    && rm -rf /var/lib/apt/lists/*
 
 # Explicitly set certificate locations for Go
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 ENV SSL_CERT_DIR=/etc/ssl/certs
 
+# Set Go environment
+ENV GOPATH=/go
+ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
+ENV CGO_ENABLED=1
+
 # Copy Go modules manifests
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code (all Go files, not just *.go)
+# Copy source code
 COPY . .
 
 # Debug - list files to ensure they're copied
 RUN ls -la
 
-# Build with CGO enabled for chromedp - with explicit architecture flags
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -v -o ogdrip-backend
+# Build the Go application directly in the final image
+RUN go build -v -o ogdrip-backend
 
 # Verify the binary exists and is executable
 RUN ls -la ogdrip-backend && chmod +x ogdrip-backend && file ogdrip-backend
-
-# Production image
-FROM debian:bookworm-slim
-WORKDIR /app
-
-# Install Chromium and dependencies
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    chromium \
-    file \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy binary from builder
-COPY --from=builder /app/ogdrip-backend ./ogdrip-backend
-
-# Verify the binary was copied correctly
-RUN ls -la && file ./ogdrip-backend && chmod +x ./ogdrip-backend
 
 # Create output directory
 RUN mkdir -p /app/outputs
