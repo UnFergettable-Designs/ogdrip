@@ -20,11 +20,11 @@ ENV SSL_CERT_DIR=/etc/ssl/certs
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
-COPY *.go ./
+# Copy source code (all Go files, not just *.go)
+COPY . .
 
 # Build with CGO enabled for chromedp
-RUN CGO_ENABLED=1 GOOS=linux go build -o /app/ogdrip-backend *.go
+RUN CGO_ENABLED=1 GOOS=linux go build -v -o /app/ogdrip-backend
 
 # Production image
 FROM debian:bookworm-slim
