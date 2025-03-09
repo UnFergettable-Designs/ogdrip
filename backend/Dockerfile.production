@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine
+FROM golang:1.23-alpine AS builder
 WORKDIR /app
 
 # Install updated CA certificates and SSL libraries
@@ -7,18 +7,14 @@ RUN apk update && \
     chromium \
     ca-certificates \
     openssl \
+    gcc \
+    musl-dev \
+    git \
     && update-ca-certificates 2>/dev/null || true
 
 # Explicitly set certificate locations for Go
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 ENV SSL_CERT_DIR=/etc/ssl/certs
-
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    libc6-dev \
-    git \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy Go modules manifests
 COPY go.mod go.sum ./
