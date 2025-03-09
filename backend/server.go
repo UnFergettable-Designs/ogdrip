@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -13,14 +14,13 @@ import (
 	"strings"
 	"text/template"
 	"time"
-	"bytes"
 
 	"github.com/chromedp/chromedp"
 	"github.com/getsentry/sentry-go"
 )
 
 // Database instance
-var db *Database
+var serverDB *Database
 
 // OpenGraphData represents the data needed for Open Graph meta tags
 type OpenGraphData struct {
@@ -52,7 +52,7 @@ func generateMetaTags(data OpenGraphData) string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}}</title>
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="{{.Type}}">
     <meta property="og:url" content="{{.PageURL}}">
@@ -62,26 +62,26 @@ func generateMetaTags(data OpenGraphData) string {
     {{if .SiteName}}<meta property="og:site_name" content="{{.SiteName}}">{{end}}
     <meta property="og:image:width" content="{{.ImageWidth}}">
     <meta property="og:image:height" content="{{.ImageHeight}}">
-    
+
     <!-- Twitter -->
     <meta name="twitter:card" content="{{.TwitterCard}}">
     <meta name="twitter:url" content="{{.PageURL}}">
     <meta name="twitter:title" content="{{.Title}}">
     <meta name="twitter:description" content="{{.Description}}">
     <meta name="twitter:image" content="{{.ImageURL}}">
-    
+
     <!-- LinkedIn -->
     <meta name="linkedin:title" content="{{.Title}}">
     <meta name="linkedin:description" content="{{.Description}}">
     <meta name="linkedin:image" content="{{.ImageURL}}">
-    
+
     <!-- Additional helpful meta tags -->
     <meta name="description" content="{{.Description}}">
 </head>
 <body>
     <h1>Open Graph Preview for: {{.Title}}</h1>
     <p>This page contains the Open Graph meta tags for your content.</p>
-    
+
     <div style="margin: 20px 0;">
         <h2>Preview:</h2>
         <div style="border: 1px solid #ccc; border-radius: 8px; overflow: hidden; max-width: 600px;">
@@ -93,7 +93,7 @@ func generateMetaTags(data OpenGraphData) string {
             </div>
         </div>
     </div>
-    
+
     <div style="margin: 30px 0;">
         <h2>HTML Code:</h2>
         <pre style="background: #f4f4f4; padding: 15px; border-radius: 5px; overflow: auto;"><code>
@@ -139,10 +139,10 @@ func generateMetaTags(data OpenGraphData) string {
 // startLocalServer starts a local HTTP server to serve the HTML and image
 func startLocalServer(htmlContent string, imagePath string, port string) string {
 	serverURL := fmt.Sprintf("http://localhost:%s", port)
-	
+
 	// Create a file server handler
 	fs := http.FileServer(http.Dir("."))
-	
+
 	// Define handlers
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
@@ -153,7 +153,7 @@ func startLocalServer(htmlContent string, imagePath string, port string) string 
 		// Serve other requests through the file server
 		fs.ServeHTTP(w, r)
 	})
-	
+
 	// Start the server in a goroutine
 	go func() {
 		fmt.Printf("Starting local server at %s\n", serverURL)
@@ -161,10 +161,10 @@ func startLocalServer(htmlContent string, imagePath string, port string) string 
 			log.Fatalf("Error starting server: %v", err)
 		}
 	}()
-	
+
 	// Wait a moment for the server to start
 	time.Sleep(500 * time.Millisecond)
-	
+
 	return serverURL
 }
 
@@ -208,7 +208,7 @@ func initService() {
 	var err error
 
 	// Initialize database if not already done
-	db, err = InitDB()
+	serverDB, err = InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
@@ -230,7 +230,7 @@ func initService() {
 	}
 
 	// Start cleanup scheduler to run every hour
-	startCleanupScheduler(db, 1*time.Hour)
+	startCleanupScheduler(serverDB, 1*time.Hour)
 }
 
 // ServerMain is the entry point for the OG generator functionality
@@ -252,7 +252,7 @@ func ServerMain() {
 	// Create a new FlagSet and define all the flags
 	fs := flag.NewFlagSet("og-generator", flag.ContinueOnError)
 	fs.SetOutput(ioutil.Discard) // Suppress error output
-	
+
 	// Define all flags
 	webpageURL := fs.String("url", "", "Webpage URL to capture")
 	outputPath := fs.String("output", "outputs/og_image.png", "Output file path for the screenshot")
@@ -273,10 +273,10 @@ func ServerMain() {
 	preview := fs.Bool("preview", false, "Start a local server to preview the Open Graph implementation")
 	port := fs.String("port", "8080", "Port for the preview server")
 	isApiService := fs.Bool("api-service", isAPIService, "Set to true when running as part of the API service")
-	
+
 	// Parse the command line arguments
 	_ = fs.Parse(os.Args[1:])
-	
+
 	if *verbose {
 		log.Printf("Command-line arguments: %v", os.Args)
 		log.Printf("Output paths: image=%s, html=%s", *outputPath, *outputHTML)
@@ -296,7 +296,7 @@ func ServerMain() {
 		log.Printf("Error creating absolute path: %v", err)
 		return
 	}
-	
+
 	absHTMLPath, err := filepath.Abs(*outputHTML)
 	if err != nil {
 		log.Printf("Error creating absolute path: %v", err)
@@ -322,14 +322,16 @@ func ServerMain() {
 	log.Printf("Using output paths: Image=%s, HTML=%s", absOutputPath, absHTMLPath)
 
 	// Initialize the database
-	db, err := InitDB()
+	serverDB, err := InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
-	defer db.CloseDB()
+	// Don't close the database connection here as we need it for ongoing operations
+	// and the goroutines that run concurrently for image generation
+	// defer serverDB.CloseDB()
 
 	// Start the cleanup scheduler to run every hour
-	startCleanupScheduler(db, 1*time.Hour)
+	startCleanupScheduler(serverDB, 1*time.Hour)
 
 	// Generate image if a URL is provided
 	if *webpageURL != "" {
@@ -424,16 +426,16 @@ func ServerMain() {
 		// Capture screenshot
 		var buf []byte
 		var htmlContent string
-		
+
 		fmt.Printf("Navigating to %s and waiting for content to load...\n", fixedURL)
-		
+
 		if err := chromedp.Run(ctx,
 			// Navigate to the URL
 			chromedp.Navigate(fixedURL),
-			
+
 			// Wait for the specified selector to be visible
 			chromedp.WaitVisible(*selector, chromedp.ByQuery),
-			
+
 			// Wait for document to be ready
 			chromedp.ActionFunc(func(ctx context.Context) error {
 				err := chromedp.Evaluate(`
@@ -447,14 +449,14 @@ func ServerMain() {
 				`, nil).Do(ctx)
 				return err
 			}),
-			
+
 			// Ensure text elements are visible by forcing display properties
 			chromedp.ActionFunc(func(ctx context.Context) error {
 				script := `
 					new Promise((resolve) => {
 						// Force all elements to be visible
 						const textElements = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, div, a, button, input, textarea, label');
-						
+
 						textElements.forEach(el => {
 							// Check if element or its ancestors might have text content
 							if (el.textContent && el.textContent.trim() !== '') {
@@ -474,21 +476,21 @@ func ServerMain() {
 								}
 							}
 						});
-						
+
 						// Force all potential text-containing elements to render
 						document.querySelectorAll('[style*="display:none"], [style*="display: none"]').forEach(el => {
 							if (el.textContent && el.textContent.trim() !== '') {
 								el.style.setProperty('display', 'block', 'important');
 							}
 						});
-						
+
 						// Allow a bit of time for changes to take effect
 						setTimeout(resolve, 500);
 					})
 				`
 				return chromedp.Evaluate(script, nil).Do(ctx)
 			}),
-			
+
 			// Simulate user scrolling to trigger lazy-loaded content
 			chromedp.ActionFunc(func(ctx context.Context) error {
 				script := `
@@ -499,15 +501,15 @@ func ServerMain() {
 							document.body.offsetHeight, document.documentElement.offsetHeight,
 							document.body.clientHeight, document.documentElement.clientHeight
 						);
-						
+
 						// Scroll in increments to trigger events
 						const increment = Math.max(window.innerHeight / 2, 200);
 						let currentScroll = 0;
-						
+
 						const scrollInterval = setInterval(() => {
 							window.scrollTo(0, currentScroll);
 							currentScroll += increment;
-							
+
 							if (currentScroll >= scrollHeight) {
 								clearInterval(scrollInterval);
 								// Scroll back to top
@@ -519,7 +521,7 @@ func ServerMain() {
 				`
 				return chromedp.Evaluate(script, nil).Do(ctx)
 			}),
-			
+
 			// Simulate hovering on elements to trigger any hover effects
 			chromedp.ActionFunc(func(ctx context.Context) error {
 				script := `
@@ -539,13 +541,13 @@ func ServerMain() {
 				`
 				return chromedp.Evaluate(script, nil).Do(ctx)
 			}),
-			
+
 			// Additional wait time to ensure all content is fully loaded
-			chromedp.Sleep(time.Duration(*waitTime) * time.Millisecond),
-			
+			chromedp.Sleep(time.Duration(*waitTime)*time.Millisecond),
+
 			// Get the HTML content for debugging
 			chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
-			
+
 			// Take the screenshot
 			chromedp.FullScreenshot(&buf, int(*quality)),
 		); err != nil {
@@ -572,7 +574,7 @@ func ServerMain() {
 		}
 
 		fmt.Printf("Screenshot saved to %s\n", absOutputPath)
-		
+
 		// Try to extract title and description from the page if not provided
 		if *title == "" {
 			var extractedTitle string
@@ -581,7 +583,7 @@ func ServerMain() {
 				fmt.Printf("Extracted title from page: %s\n", *title)
 			}
 		}
-		
+
 		if *description == "" {
 			var extractedDesc string
 			if err := chromedp.Run(ctx, chromedp.EvaluateAsDevTools(`document.querySelector('meta[name="description"]')?.content || document.querySelector('meta[property="og:description"]')?.content || ""`, &extractedDesc)); err == nil && extractedDesc != "" {
@@ -589,7 +591,7 @@ func ServerMain() {
 				fmt.Printf("Extracted description from page: %s\n", *description)
 			}
 		}
-		
+
 		if *siteName == "" {
 			var extractedSiteName string
 			if err := chromedp.Run(ctx, chromedp.EvaluateAsDevTools(`document.querySelector('meta[property="og:site_name"]')?.content || document.domain || ""`, &extractedSiteName)); err == nil && extractedSiteName != "" {
@@ -603,11 +605,11 @@ func ServerMain() {
 	if *title == "" {
 		*title = "Open Graph Generated Content"
 	}
-	
+
 	if *description == "" {
 		*description = "Content shared with Open Graph meta tags"
 	}
-	
+
 	// Determine the target URL
 	pageURL := *targetURL
 	if pageURL == "" {
@@ -618,12 +620,12 @@ func ServerMain() {
 			pageURL = "https://example.com/"
 		}
 	}
-	
+
 	// Determine image URL - check that the image file exists first
 	imageURL := ""
 	_, err = os.Stat(absOutputPath)
 	imageExists := !os.IsNotExist(err)
-	
+
 	if imageExists {
 		if *verbose {
 			log.Printf("Image file exists at: %s", absOutputPath)
@@ -634,7 +636,7 @@ func ServerMain() {
 		}
 		fmt.Println("Warning: No image was generated. Using a placeholder in the meta tags.")
 	}
-	
+
 	if *preview {
 		// For preview, use relative path to the image
 		imageURL = "/" + filepath.Base(absOutputPath)
@@ -650,14 +652,14 @@ func ServerMain() {
 		}
 		imageURL += filepath.Base(absOutputPath)
 	}
-	
+
 	// If we don't have an image, use a placeholder
 	if !imageExists && *webpageURL == "" {
 		fmt.Println("Warning: No image was generated. Using a placeholder in the meta tags.")
 		// Set a placeholder URL for the image
 		imageURL = "https://via.placeholder.com/1200x630?text=" + url.QueryEscape(*title)
 	}
-	
+
 	// Create the Open Graph data
 	ogData := OpenGraphData{
 		Title:       *title,
@@ -671,30 +673,30 @@ func ServerMain() {
 		TwitterCard: *twitterCard,
 		LocalImage:  *preview,
 	}
-	
+
 	htmlOutput := generateMetaTags(ogData)
-	
+
 	// Save HTML to file, using the absolute path to ensure it's saved to the correct location
 	if err := ioutil.WriteFile(absHTMLPath, []byte(htmlOutput), 0644); err != nil {
 		log.Fatal(err)
 	}
-	
+
 	fmt.Printf("HTML with Open Graph meta tags saved to %s\n", absHTMLPath)
-	
+
 	if *verbose {
 		log.Printf("Files generated - Image: %s, HTML: %s", absOutputPath, absHTMLPath)
 	}
-	
+
 	// If preview mode is enabled, start a local server
 	if *preview {
 		serverURL := startLocalServer(htmlOutput, absOutputPath, *port)
 		fmt.Printf("Preview available at: %s\n", serverURL)
 		fmt.Printf("Press Ctrl+C to stop the server.\n")
-		
+
 		// Keep the program running until it's terminated
 		select {}
 	}
-	
+
 	if *verbose && *isApiService {
 		log.Printf("ServerMain completed successfully. Returning to API service.")
 	}
