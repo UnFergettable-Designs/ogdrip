@@ -1,0 +1,36 @@
+{
+  "recommendations": [
+    // Astro and Svelte
+    "astro-build.astro-vscode",
+    "svelte.svelte-vscode",
+
+    // TypeScript/JavaScript
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+
+    // Go
+    "golang.go",
+
+    // Testing
+    "rangav.vscode-thunder-client",
+    "Orta.vscode-jest",
+
+    // Git
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // Helpful utilities
+    "christian-kohler.path-intellisense",
+    "formulahendry.auto-rename-tag",
+    "aaron-bond.better-comments",
+    "streetsidesoftware.code-spell-checker",
+    "naumovs.color-highlight",
+    "mikestead.dotenv",
+    "yzhang.markdown-all-in-one",
+    "bierner.markdown-preview-github-styles",
+
+    // SQL for database work
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-sqlite"
+  ]
+}
