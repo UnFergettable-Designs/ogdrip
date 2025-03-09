@@ -18,6 +18,9 @@ version = 1
 go = { pkg-path = "go", version = "^1.23" }
 pnpm.pkg-path = "pnpm"
 nodejs.pkg-path = "nodejs"
+colima.pkg-path = "colima"
+nerdctl.pkg-path = "nerdctl"
+nerdctl.systems = ["aarch64-linux", "x86_64-linux"]
 
 
 ## Environment Variables ---------------------------------------------

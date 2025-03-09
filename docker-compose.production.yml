@@ -2,8 +2,8 @@ services:
   # Frontend service (Astro+Svelte static site with Node.js serve)
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.production
+      context: .
+      dockerfile: frontend/Dockerfile.production
     ports:
       - "3000:3000"
     environment:
@@ -22,7 +22,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.production
     ports:
       - "8888:8888"
     environment:

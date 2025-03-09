@@ -3,9 +3,19 @@
   "manifest": {
     "version": 1,
     "install": {
+      "colima": {
+        "pkg-path": "colima"
+      },
       "go": {
         "pkg-path": "go",
         "version": "^1.23"
+      },
+      "nerdctl": {
+        "pkg-path": "nerdctl",
+        "systems": [
+          "aarch64-linux",
+          "x86_64-linux"
+        ]
       },
       "nodejs": {
         "pkg-path": "nodejs"
@@ -32,6 +42,122 @@
     }
   },
   "packages": [
+    {
+      "attr_path": "colima",
+      "broken": false,
+      "derivation": "/nix/store/3sr5sg125q56grah5wx9n60w2pgpis32-colima-0.8.1.drv",
+      "description": "Container runtimes with minimal setup",
+      "install_id": "colima",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "name": "colima-0.8.1",
+      "pname": "colima",
+      "rev": "ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "rev_count": 762036,
+      "rev_date": "2025-03-03T13:57:36Z",
+      "scrape_date": "2025-03-04T00:30:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.8.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/ivlnc4zhss54wyjaim8zbk4z268c2crq-colima-0.8.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "colima",
+      "broken": false,
+      "derivation": "/nix/store/vix8lkhrfsrhf7rx6x7kg04qy7i4b7k3-colima-0.8.1.drv",
+      "description": "Container runtimes with minimal setup",
+      "install_id": "colima",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "name": "colima-0.8.1",
+      "pname": "colima",
+      "rev": "ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "rev_count": 762036,
+      "rev_date": "2025-03-03T13:57:36Z",
+      "scrape_date": "2025-03-04T00:30:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.8.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/lkablvpv813mjl9wrjw7nqw9gr8w0fr6-colima-0.8.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "colima",
+      "broken": false,
+      "derivation": "/nix/store/phmm76lv86663d464ybk9mwfjz2kvpi3-colima-0.8.1.drv",
+      "description": "Container runtimes with minimal setup",
+      "install_id": "colima",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "name": "colima-0.8.1",
+      "pname": "colima",
+      "rev": "ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "rev_count": 762036,
+      "rev_date": "2025-03-03T13:57:36Z",
+      "scrape_date": "2025-03-04T00:30:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.8.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/nkfnsdnwwqbr2cbq4sklv3s8qd95kv5d-colima-0.8.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "colima",
+      "broken": false,
+      "derivation": "/nix/store/h5mqqpk0j48bzhb99qnf5gcqaayw3mhi-colima-0.8.1.drv",
+      "description": "Container runtimes with minimal setup",
+      "install_id": "colima",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "name": "colima-0.8.1",
+      "pname": "colima",
+      "rev": "ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "rev_count": 762036,
+      "rev_date": "2025-03-03T13:57:36Z",
+      "scrape_date": "2025-03-04T00:30:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.8.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/52nb1wq9mwlz3hh8f1xmdjkn2z5c9z6j-colima-0.8.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
     {
       "attr_path": "go",
       "broken": false,
@@ -143,6 +269,64 @@
       ],
       "outputs": {
         "out": "/nix/store/8zgc91q1igzgmg36mglxrk8qa1r2dvsd-go-1.23.6"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nerdctl",
+      "broken": false,
+      "derivation": "/nix/store/3r6gbyh5kglsc10q0srmpjgcpfc73wsg-nerdctl-1.7.7.drv",
+      "description": "Docker-compatible CLI for containerd",
+      "install_id": "nerdctl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "name": "nerdctl-1.7.7",
+      "pname": "nerdctl",
+      "rev": "ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "rev_count": 762036,
+      "rev_date": "2025-03-03T13:57:36Z",
+      "scrape_date": "2025-03-04T00:30:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.7.7",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/idmx6qb3c65dgvmfdkc1dz788zaib72d-nerdctl-1.7.7"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nerdctl",
+      "broken": false,
+      "derivation": "/nix/store/mgji3g8zhmwmdvnkjv009vzp1y94jj42-nerdctl-1.7.7.drv",
+      "description": "Docker-compatible CLI for containerd",
+      "install_id": "nerdctl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "name": "nerdctl-1.7.7",
+      "pname": "nerdctl",
+      "rev": "ba487dbc9d04e0634c64e3b1f0d25839a0a68246",
+      "rev_count": 762036,
+      "rev_date": "2025-03-03T13:57:36Z",
+      "scrape_date": "2025-03-04T00:30:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.7.7",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/mx6bf7naa5mpa430gg869b2g5if129mz-nerdctl-1.7.7"
       },
       "system": "x86_64-linux",
       "group": "toplevel",

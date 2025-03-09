@@ -6,7 +6,7 @@
     "dev": "turbo dev",
     "dev:frontend": "turbo dev:frontend --filter=@ogdrip/frontend",
     "dev:backend": "turbo dev:backend --filter=@ogdrip/backend",
-    "dev:all": "turbo dev:all",
+    "dev:all": "turbo run dev:frontend dev:backend",
     "lint": "turbo lint",
     "clean": "turbo clean",
     "format": "prettier --write \"**/*.{ts,tsx,md,js,jsx,json}\"",
@@ -15,14 +15,31 @@
     "prepare": "husky",
     "setup": "mkdir -p frontend/src/utils && mkdir -p frontend/public/images",
     "setup:backend": "mkdir -p backend/build",
+    "test": "turbo test",
+    "test:coverage": "turbo test:coverage",
+    "brew:install:docker": "brew install docker docker-compose",
+    "brew:install:nerdctl": "brew install nerdctl",
     "docker:build": "docker-compose build",
     "docker:start": "docker-compose up",
     "docker:clean": "docker-compose down -v && docker-compose build --no-cache && docker-compose up",
-    "test": "turbo test",
-    "test:coverage": "turbo test:coverage",
     "docker:prod:build": "docker-compose -f docker-compose.production.yml build",
     "docker:prod:start": "docker-compose -f docker-compose.production.yml up -d",
-    "docker:prod:stop": "docker-compose -f docker-compose.production.yml down"
+    "docker:prod:stop": "docker-compose -f docker-compose.production.yml down",
+    "rancher:start": "./scripts/rancher-helper.sh start",
+    "rancher:stop": "./scripts/rancher-helper.sh stop",
+    "rancher:status": "./scripts/rancher-helper.sh status",
+    "rancher:build": "./scripts/rancher-helper.sh build .",
+    "rancher:run": "./scripts/rancher-helper.sh run",
+    "rancher:check": "./scripts/rancher-helper.sh check-nerdctl",
+    "nerdctl:setup": "./scripts/setup-nerdctl.sh",
+    "nerdctl:build": "nerdctl build .",
+    "nerdctl:build:frontend": "nerdctl build -t ogdrip-frontend:local ./frontend",
+    "nerdctl:build:backend": "nerdctl build -t ogdrip-backend:local ./backend",
+    "nerdctl:run:frontend": "nerdctl run -p 3000:3000 ogdrip-frontend:local",
+    "nerdctl:run:backend": "nerdctl run -p 8080:8080 ogdrip-backend:local",
+    "nerdctl:compose:build": "nerdctl compose build",
+    "nerdctl:compose:up": "nerdctl compose up",
+    "nerdctl:compose:down": "nerdctl compose down"
   },
   "devDependencies": {
     "husky": "^9.1.7",
@@ -31,9 +48,9 @@
     "turbo": "^2.4.4"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
-  "packageManager": "pnpm@8.15.4",
+  "packageManager": "pnpm@10.5.2",
   "lint-staged": {
     "*.{js,ts,tsx,svelte,astro,css,md,json}": [
       "prettier --write"

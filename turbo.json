@@ -27,7 +27,7 @@
     },
     "dev:all": {
       "cache": false,
-      "dependsOn": ["dev:frontend", "dev:backend"]
+      "persistent":true
     },
     "lint": {
       "outputs": []

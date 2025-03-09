@@ -1,10 +1,5 @@
 FROM golang:1.23-alpine
 
-# Note: This base image will be pulled from Docker Hub.
-# If you encounter authentication issues, you may need to:
-# 1. Login to Docker Hub: docker login
-# 2. Or use a local development approach without Docker (see LOCAL_DEPLOYMENT.md)
-
 # Install required dependencies
 RUN apk add --no-cache chromium ca-certificates git gcc musl-dev
 
@@ -16,55 +11,24 @@ ENV CGO_ENABLED=1
 # Set the working directory
 WORKDIR /app
 
-# Create necessary files for minimal build
-COPY <<EOF /app/go.mod
-module og-generator
+# Copy go.mod and go.sum
+COPY go.mod go.sum* ./
 
-go 1.23
-EOF
+# Download dependencies
+RUN go mod download
 
-COPY <<EOF /app/main.go
-package main
-
-import (
-    "fmt"
-    "log"
-    "net/http"
-    "os"
-)
-
-func main() {
-    port := os.Getenv("PORT")
-    if port == "" {
-        port = "8888"
-    }
-    
-    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintf(w, "Open Graph Generator API Running")
-    })
-    
-    http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusOK)
-        fmt.Fprintf(w, `{"success":true,"message":"Open Graph Generator API is running"}`)
-    })
-    
-    log.Printf("Starting server on port %s", port)
-    if err := http.ListenAndServe(":" + port, nil); err != nil {
-        log.Fatalf("Server failed: %v", err)
-    }
-}
-EOF
-
-# Build the executable
-RUN go build -o og-generator .
+# Copy the rest of the code
+COPY . .
 
 # Create output and data directories
 RUN mkdir -p /app/outputs
 RUN mkdir -p /app/data
 
+# Build the executable
+RUN go build -o og-generator .
+
 # Expose port
 EXPOSE 8888
 
-# Command that will be overridden at runtime
-CMD ["./og-generator"] 
+# Command to run
+CMD ["./og-generator", "-service"]
