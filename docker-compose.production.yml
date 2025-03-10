@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: frontend/Dockerfile.production
     ports:
-      - '3000:3000'
+      - '3000:80'
     environment:
       - BACKEND_URL=https://api.og-drip.com
       - PUBLIC_BACKEND_URL=https://api.og-drip.com
