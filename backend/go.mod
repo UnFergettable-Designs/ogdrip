@@ -1,6 +1,6 @@
 module mymodule
 
-go 1.23
+go 1.24
 
 require (
 	github.com/chromedp/cdproto v0.0.0-20241030022559-23c28aebe8cb

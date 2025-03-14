@@ -1,57 +1,61 @@
-FROM debian:bookworm-slim
+# Use a dedicated builder that supports cross-compilation
+FROM --platform=linux/amd64 golang:1.24-bullseye AS builder
 
+# Create app directory
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libc6-dev \
+    pkg-config \
+    sqlite3 \
+    libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Go module files first for better caching
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+# Copy the rest of the source code
+COPY . .
+
+# Build with CGO enabled and debug the binary
+RUN CGO_ENABLED=1 go build -v -o ogdrip-backend . && \
+    file ogdrip-backend && \
+    ls -la ogdrip-backend && \
+    ./ogdrip-backend -h || echo "Expected error in builder - this is just for validation"
+
+# Use a Debian-based image for runtime
+FROM --platform=linux/amd64 debian:bullseye-slim
+
+# Set working directory
 WORKDIR /app
 
-# Install dependencies first (without golang from apt)
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     chromium \
+    libsqlite3-0 \
     file \
-    build-essential \
-    git \
-    wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Go 1.21 manually
-RUN wget https://go.dev/dl/go1.24.1.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.24.1.linux-amd64.tar.gz && \
-    rm go1.24.1.linux-amd64.tar.gz
-
-# Explicitly set certificate locations for Go
-ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
-ENV SSL_CERT_DIR=/etc/ssl/certs
-
-# Set Go environment
-ENV GOPATH=/go
-ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
-ENV CGO_ENABLED=1
-
-# Copy Go modules manifests
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy source code
-COPY . .
-
-# Debug - list files to ensure they're copied
-RUN ls -la
-
-# Build the Go application directly in the final image
-RUN go build -v -o ogdrip-backend
+# Copy the binary from the builder stage
+COPY --from=builder /build/ogdrip-backend ./
 
 # Verify the binary exists and is executable
-RUN ls -la ogdrip-backend && chmod +x ogdrip-backend && file ogdrip-backend
+RUN ls -la ogdrip-backend && \
+    chmod +x ogdrip-backend && \
+    file ogdrip-backend
 
 # Create output directory
 RUN mkdir -p /app/outputs
 
-# Set environment variables
-ENV CHROME_PATH=/usr/bin/chromium-browser
-ENV CHROME_FLAGS=--headless,--disable-gpu,--no-sandbox
+# Environment variables
 ENV PORT=8888
+ENV BASE_URL=http://localhost:8888
+ENV CHROME_PATH=/usr/bin/chromium
+ENV OUTPUT_DIR=/app/outputs
 
-# Expose port
-EXPOSE 8888
-
-# Run backend
+# Command to run the application with -service flag
 CMD ["./ogdrip-backend", "-service"]

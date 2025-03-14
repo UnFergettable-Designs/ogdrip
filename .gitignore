@@ -30,7 +30,7 @@ yarn-error.log*
 .node_repl_history
 
 # Build outputs
-dist/
+# dist/ - Commented out to allow dist folder to be committed
 .astro/
 .turbo/
 .cache/
@@ -76,3 +76,4 @@ backend/outputs/
 backend/og-generator
 backend/data/
 *.db
+.qodo

@@ -19,12 +19,6 @@ services:
     volumes:
       - outputs:/app/dist/outputs
       - ./frontend/public/images:/app/dist/images
-    labels:
-      - coolify.managed=true
-      - coolify.name=frontend-${COOLIFY_RESOURCE_UUID}
-      - coolify.resourceName=un-fergettable-designsogdrip
-      - coolify.projectName=ogdrip
-      - coolify.environmentName=production
 
   # Backend service (Go with ChromeDP)
   backend:
@@ -49,12 +43,6 @@ services:
     restart: unless-stopped
     mem_limit: 2G
     cpu_shares: 2048
-    labels:
-      - coolify.managed=true
-      - coolify.name=backend-${COOLIFY_RESOURCE_UUID}
-      - coolify.resourceName=un-fergettable-designsogdrip
-      - coolify.projectName=ogdrip
-      - coolify.environmentName=production
 
 volumes:
   outputs:

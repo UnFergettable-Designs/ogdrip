@@ -1,33 +1,24 @@
 services:
   # Frontend service (Astro+Svelte with Node.js + PNPM)
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+    # Using the prebuilt image instead of building from Dockerfile
+    image: ogdrip-frontend:prebuilt
+    # Not exposing port 3000 to host, Nginx will proxy to it
     environment:
       - BACKEND_URL=http://backend:8888
-      - NODE_ENV=development
-      - SVELTE_FORCE_COMPILE=true
-      - ASTRO_TELEMETRY_DISABLED=1
+      - NODE_ENV=production
     depends_on:
       - backend
     restart: unless-stopped
     volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
-      - frontend_pnpm_store:/root/.local/share/pnpm/store
-      - outputs:/app/public/outputs
-      - ./frontend/public/images:/app/public/images
+      - outputs:/app/outputs
 
   # Backend service (Go with ChromeDP)
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "8888:8888"
+    # Not exposing port 8888 to host, Nginx will proxy to it
     environment:
       - PORT=8888
       - BASE_URL=http://backend:8888
@@ -39,8 +30,28 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2"
+          cpus: '2'
           memory: 2G
+
+  # Nginx service for testing configuration
+  nginx:
+    image: nginx:latest
+    ports:
+      - '80:80' # Map port 80 of host to port 80 of container
+      - '443:443' # Map port 443 of host to port 443 of container
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - outputs:/app/outputs
+      - ./frontend/public:/app/public
+    depends_on:
+      - frontend
+      - backend
+    # Command to create self-signed SSL certificates for local testing
+    command:
+      /bin/bash -c "mkdir -p /etc/letsencrypt/live/og-drip.com && openssl req -x509 -nodes -days 365
+      -newkey rsa:2048 -keyout /etc/letsencrypt/live/og-drip.com/privkey.pem -out
+      /etc/letsencrypt/live/og-drip.com/fullchain.pem -subj '/CN=og-drip.com' && nginx -g 'daemon
+      off;'"
 
 volumes:
   frontend_node_modules:
