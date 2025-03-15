@@ -21,6 +21,10 @@ services:
     volumes:
       - outputs:/app/outputs
       - ./frontend/public/images:/app/images
+    labels:
+      caddy: og-drip.com, www.og-drip.com
+      caddy.reverse_proxy: '{{upstreams 3000}}'
+      caddy.reverse_proxy.header_up.X-Forwarded-Proto: 'https'
 
   # Backend service (Go with ChromeDP)
   backend:
@@ -49,6 +53,12 @@ services:
         limits:
           memory: 3G
           cpus: '2'
+    labels:
+      caddy: api.og-drip.com
+      caddy.reverse_proxy: '{{upstreams 8888}}'
+      caddy.reverse_proxy.header_up.X-Forwarded-Proto: 'https'
+      caddy.reverse_proxy.header_up.X-Forwarded-For: '{http.request.header.CF-Connecting-IP}'
+      caddy.reverse_proxy.header_up.X-Real-IP: '{http.request.header.CF-Connecting-IP}'
 
 volumes:
   outputs:
