@@ -25,6 +25,12 @@ services:
       caddy: og-drip.com, www.og-drip.com
       caddy.reverse_proxy: '{{upstreams 3000}}'
       caddy.reverse_proxy.header_up.X-Forwarded-Proto: 'https'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Backend service (Go with ChromeDP)
   backend:
@@ -59,6 +65,12 @@ services:
       caddy.reverse_proxy.header_up.X-Forwarded-Proto: 'https'
       caddy.reverse_proxy.header_up.X-Forwarded-For: '{http.request.header.CF-Connecting-IP}'
       caddy.reverse_proxy.header_up.X-Real-IP: '{http.request.header.CF-Connecting-IP}'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8888/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   outputs:
