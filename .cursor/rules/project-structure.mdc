@@ -1,0 +1,41 @@
+---
+description: This rule describes the structure of the Open Graph Generator monorepo project.
+globs: 
+alwaysApply: false
+---
+  # Project Structure
+
+This rule describes the structure of the Open Graph Generator monorepo project.
+
+## General Project Information
+- **Name**: Open Graph Generator
+- **Type**: Monorepo
+- **Build System**: pnpm
+
+## Project Components
+
+### Frontend
+- **Path**: `./frontend`
+- **Stack**: Node.js, pnpm, Astro, Svelte 5
+- **Description**: Astro+Svelte frontend with Node.js
+
+### Backend
+- **Path**: `./backend`
+- **Stack**: Go, ChromeDP, SQLite
+- **Description**: Go backend for Open Graph image and metadata generation with SQLite storage
+
+### Shared
+- **Path**: `./shared`
+- **Description**: Shared TypeScript types and utilities
+
+## Root Configuration
+The `package.json` at the root should:
+- Define tasks for all components (frontend, backend)
+- Include workspace settings for npm workspaces
+- Provide composite tasks that run across the monorepo
+
+## Monorepo Structure
+- **Root Files**: `package.json`
+- **Workspaces**:
+  - `frontend`
+  - `shared`

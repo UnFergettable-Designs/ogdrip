@@ -1,0 +1,68 @@
+---
+description: Ensuring that container builds are created properly
+globs: docker-compose.yml, Dockerfile, */Dockerfile, package.json, pnpm-lock.yaml, frontend/astro.config.mjs, backend/go.mod
+alwaysApply: false
+---
+---
+description: Ensuring that container builds are created properly
+globs:
+- docker-compose.yml
+- Dockerfile
+- */Dockerfile
+- package.json
+- pnpm-lock.yaml
+- frontend/astro.config.mjs
+- backend/go.mod
+---
+
+# Container Build Configuration
+
+This rule ensures that container builds are created properly for the Open Graph Generator project.
+
+## Deployment Tooling
+- **Local Development**: Use `nerdctl` for local container management
+- **Production**: The application is deployed to Coolify for production environment
+
+## Docker Configuration
+- `docker-compose.yml` should follow these guidelines:
+  - Frontend service must use the current lts Node.js image
+  - Backend service must expose API on port 8888
+  - Use volume mounts for persistent storage of generated images
+  - Define shared network for service communication
+
+## Build Commands
+The following build commands should be used:
+```
+# Setup the project
+pnpm install && cd backend && go mod tidy
+
+# Development mode
+pnpm dev
+
+# Build all components
+pnpm build
+```
+
+## Monorepo Build Tasks
+The project uses pnpm as the build system with these tasks:
+- `dev`: Start all development servers
+- `build`: Build all components
+- `test`: Run tests for all components
+- `lint`: Lint all components
+
+## Component-Specific Build Requirements
+
+### Frontend (Astro+Svelte)
+- Located in `./frontend`
+- Must include appropriate npm dependencies for Astro and Svelte
+- Scripts should include dev, build, preview, and lint commands
+- `astro.config.mjs` must include svelte() integration from @astrojs/svelte
+
+### Backend (Go)
+- Located in `./backend`
+- Browser context must be properly cleaned up after operations
+- ChromeDP operations should have appropriate timeouts
+
+### Shared Types
+- Located in `./shared`
+- Define tasks for type checking and linting

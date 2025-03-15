@@ -1,15 +1,17 @@
 services:
-  # Frontend service (Astro+Svelte static site with Node.js serve)
+  # Frontend service (Astro+Svelte with Node.js SSR)
   frontend:
     build:
       context: .
-      dockerfile: frontend/Dockerfile.production
+      dockerfile: Dockerfile.frontend.production
     ports:
-      - '3000:80'
+      - '3000:3000'
     environment:
       - BACKEND_URL=https://api.og-drip.com
       - PUBLIC_BACKEND_URL=https://api.og-drip.com
       - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3000
       - ASTRO_TELEMETRY_DISABLED=1
       - COOLIFY_URL=https://og-drip.com,https://www.og-drip.com
       - COOLIFY_FQDN=og-drip.com,www.og-drip.com
@@ -17,8 +19,8 @@ services:
       - backend
     restart: unless-stopped
     volumes:
-      - outputs:/app/dist/outputs
-      - ./frontend/public/images:/app/dist/images
+      - outputs:/app/outputs
+      - ./frontend/public/images:/app/images
 
   # Backend service (Go with ChromeDP)
   backend:
@@ -41,8 +43,11 @@ services:
     volumes:
       - outputs:/app/outputs
     restart: unless-stopped
-    mem_limit: 2G
-    cpu_shares: 2048
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
 
 volumes:
   outputs:

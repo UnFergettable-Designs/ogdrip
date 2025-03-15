@@ -1,0 +1,47 @@
+---
+description: This rule defines the coding standards for different file types in the project.
+globs: 
+alwaysApply: false
+---
+# Code Standards and Patterns
+
+This rule defines the coding standards for different file types in the project.
+
+## Frontend Code Standards
+
+### Astro Components (`frontend/**/*.astro`)
+- Astro components must import Svelte components with .svelte extension
+- Svelte components should use client:load directive for interactivity
+- Layout components should be imported from ../layouts/ directory
+
+### Svelte Components (`frontend/**/*.svelte`)
+- Use Svelte 5 runes syntax with $state, $derived, etc.
+- Script tags should include lang="ts" for TypeScript support
+- Avoid using document or window directly, prefer Svelte lifecycle methods
+
+## Backend Code Standards
+
+### Go Files (`backend/**/*.go`)
+- Use proper error handling with wrap mechanisms
+- Standardize context passing through functions
+- ChromeDP operations should have appropriate timeouts
+- File operations should use correct path handling for cross-platform compatibility
+- API endpoints should implement CORS for frontend access
+- SQLite operations should include proper error handling and transaction support
+
+### Server Implementation (`backend/server.go`)
+- Command-line flags should be properly documented
+- Browser context must be properly cleaned up after operations
+- Use consistent logging patterns throughout the application
+- File outputs should include appropriate error handling
+
+### Database Implementation (`backend/database.go`)
+- Database operations should be thread-safe
+- Include proper error handling for all database operations
+- Implement cleanup routines for removing old data
+- Use prepared statements for SQL operations
+
+## Shared Types (`shared/**/*.ts`)
+- Types should be exported for use in both frontend and backend
+- Use consistent naming conventions across the monorepo
+- Document complex types with JSDoc comments
