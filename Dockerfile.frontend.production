@@ -4,6 +4,9 @@ FROM node:22-slim
 # Set working directory
 WORKDIR /app
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Copy only the pre-built application
 # NOTE: This requires running the build locally first!
 # Run: cd frontend && pnpm build
@@ -13,7 +16,7 @@ COPY frontend/dist/ ./
 RUN echo '{"name":"ogdrip-frontend","type":"module","dependencies":{"@sentry/astro":"9.5.0","@sentry/browser":"9.5.0","clsx":"2.1.1","cookie":"0.6.0","mime":"4.0.1"}}' > package.json
 
 # Install only the minimal runtime dependencies (optimized for speed)
-RUN npm ci --production --no-fund --no-audit --prefer-offline && npm cache clean --force
+RUN pnpm install --prod --no-frozen-lockfile --prefer-offline && pnpm store prune
 
 # Create directories for mounted volumes
 RUN mkdir -p /app/outputs /app/images
