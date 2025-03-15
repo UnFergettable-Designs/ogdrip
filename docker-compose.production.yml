@@ -23,8 +23,10 @@ services:
       - ./frontend/public/images:/app/images
     labels:
       caddy: og-drip.com, www.og-drip.com
-      caddy.reverse_proxy: '{{upstreams 3000}}'
-      caddy.reverse_proxy.header_up.X-Forwarded-Proto: 'https'
+      caddy.reverse_proxy: 'localhost:3000'
+      # Additional helpful Caddy configs
+      caddy.tls: 'internal'
+      caddy.tls.protocols: 'tls1.2 tls1.3'
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3000/']
       interval: 30s
@@ -61,10 +63,14 @@ services:
           cpus: '2'
     labels:
       caddy: api.og-drip.com
-      caddy.reverse_proxy: '{{upstreams 8888}}'
-      caddy.reverse_proxy.header_up.X-Forwarded-Proto: 'https'
-      caddy.reverse_proxy.header_up.X-Forwarded-For: '{http.request.header.CF-Connecting-IP}'
-      caddy.reverse_proxy.header_up.X-Real-IP: '{http.request.header.CF-Connecting-IP}'
+      caddy.reverse_proxy: 'localhost:8888'
+      # Additional helpful Caddy configs
+      caddy.tls: 'internal'
+      caddy.tls.protocols: 'tls1.2 tls1.3'
+      # Add CORS headers directly in Caddy
+      caddy.headers:
+        "Access-Control-Allow-Origin * Access-Control-Allow-Methods 'GET, POST, OPTIONS, PUT,
+        DELETE' Access-Control-Allow-Headers 'Content-Type, Accept, Authorization, X-Requested-With'"
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:8888/api/health']
       interval: 30s
