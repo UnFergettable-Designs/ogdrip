@@ -40,13 +40,14 @@ services:
       - COOLIFY_FQDN=api.og-drip.com
       - SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
       - SSL_CERT_DIR=/etc/ssl/certs
+      - CHROME_FLAGS=--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--headless,--disable-software-rasterizer
     volumes:
       - outputs:/app/outputs
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 2G
+          memory: 3G
           cpus: '2'
 
 volumes:

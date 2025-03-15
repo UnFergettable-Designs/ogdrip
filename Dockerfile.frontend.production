@@ -25,9 +25,19 @@ RUN mkdir -p /app/outputs /app/images
 ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV NODE_ENV=production
+ENV PUBLIC_BACKEND_URL=https://backend.og-drip.com
+ENV BACKEND_URL=https://backend.og-drip.com
+# Fix the file paths in the compiled code if needed
+RUN find ./server -type f -name "*.mjs" -exec sed -i 's|file:///Users/johnferguson/Github/ogdrip/frontend/dist/|file:///app/|g' {} \;
+
+# Set correct permissions
+RUN chmod -R 755 ./server
 
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start the server
-CMD ["node", "./server/entry.mjs"]
+# Check if the server entry point exists
+RUN ls -la ./server/entry.mjs
+
+# Start the server with more detailed logging and error reporting
+CMD ["node", "--trace-warnings", "./server/entry.mjs"]

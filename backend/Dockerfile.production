@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y \
     chromium \
     libsqlite3-0 \
     file \
+    dumb-init \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the binary from the builder stage
@@ -56,6 +57,11 @@ ENV PORT=8888
 ENV BASE_URL=http://localhost:8888
 ENV CHROME_PATH=/usr/bin/chromium
 ENV OUTPUT_DIR=/app/outputs
+# Add Chromium flags for containerized environment
+ENV CHROME_FLAGS="--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--headless,--disable-software-rasterizer"
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 # Command to run the application with -service flag
 CMD ["./ogdrip-backend", "-service"]
