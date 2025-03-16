@@ -1,0 +1,22 @@
+[phases.setup]
+nixPkgs = ["nodejs", "pnpm", "go", "gcc", "pkg-config", "sqlite", "chromium"]
+
+[phases.install]
+cmds = [
+  "pnpm install"
+]
+
+[phases.build]
+cmds = [
+  "cd frontend && NODE_ENV=production pnpm build",
+  "cd ../backend && CGO_ENABLED=1 go build -v -o ogdrip-backend ."
+]
+
+[start]
+cmd = "./start.sh"
+
+[variables]
+NODE_ENV = "production"
+CHROME_PATH = "/usr/bin/chromium"
+CHROME_FLAGS = "--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--headless,--disable-software-rasterizer"
+HOST = "0.0.0.0"

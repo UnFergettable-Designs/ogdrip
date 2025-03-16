@@ -1,107 +1,153 @@
-# Deployment Guide for OG-Drip.com on Coolify
+# Deployment Guide
 
-This guide outlines the steps to deploy the Open Graph Generator service on Coolify.
+This guide covers deploying OG Drip using Coolify and nixpacks.
 
 ## Prerequisites
 
-- A Coolify instance
-- Domain names registered and pointed to your server (og-drip.com and www.og-drip.com)
-- Basic knowledge of Docker and Nginx
-- Go v1.23 or later (if deploying without Docker)
+- A Coolify instance (self-hosted or cloud)
+- Git repository with your OG Drip fork
+- Domain name (recommended)
+
+## Environment Variables
+
+### Frontend (.env)
+
+```bash
+PUBLIC_BACKEND_URL=https://api.your-domain.com
+BACKEND_URL=https://api.your-domain.com
+```
+
+### Backend (.env)
+
+```bash
+PORT=8888
+ADMIN_TOKEN=your-secure-admin-token
+CHROME_PATH=/usr/bin/chromium
+DATABASE_PATH=./data/ogdrip.db
+OUTPUT_DIR=./outputs
+```
 
 ## Deployment Steps
 
-### 1. Prepare your Environment Files
+### 1. Prepare Your Repository
 
-Before deploying, update your environment files with the correct values:
+1. Fork or clone the OG Drip repository
+2. Update environment variables as needed
+3. Push your changes to your repository
 
-- `frontend/.env.production`: Update the Sentry DSN if you're using Sentry
-- `backend/.env.production`: Update the ADMIN_TOKEN with a secure value and Sentry DSN if applicable
+### 2. Set Up Coolify
 
-### 2. Deploy to Coolify
+1. Log into your Coolify dashboard
+2. Create a new project or select an existing one
+3. Click "New Service"
+4. Choose "Source: GitHub"
+5. Select your OG Drip repository
+6. Choose "Build Pack: Nixpacks"
 
-1. Log in to your Coolify dashboard
-2. Add a new service
-3. Select "Docker Compose" as the deployment method
-4. Connect to your Git repository
-5. Choose the `docker-compose.production.yml` file for deployment
-6. Configure your domains:
-   - Primary domain: www.og-drip.com
-   - Additional domain: og-drip.com
+### 3. Configure Build Settings
 
-### 3. Configure SSL/TLS
+The repository includes a `nixpacks.toml` file that configures the build process. No additional
+configuration is needed.
 
-1. Enable "Auto SSL" in Coolify
-2. Provide your email address for Let's Encrypt notifications
-3. Wait for certificate generation
+### 4. Configure Environment Variables
 
-### 4. Set Up Persistent Volumes
+In Coolify's service settings, add the required environment variables:
 
-1. In the Coolify dashboard, go to your service settings
-2. Add persistent volumes:
-   - Path: `/app/outputs`
-   - Path: `/app/data` (for the database)
+```bash
+# Frontend
+PUBLIC_BACKEND_URL=https://your-domain.com
+BACKEND_URL=https://your-domain.com
 
-### 5. Configure Custom Nginx (Optional)
+# Backend
+PORT=8888
+ADMIN_TOKEN=your-secure-admin-token
+CHROME_PATH=/usr/bin/chromium
+DATABASE_PATH=./data/ogdrip.db
+OUTPUT_DIR=./outputs
+```
 
-If you need to use the custom Nginx configuration:
+### 5. Configure Domain and SSL
 
-1. Go to service settings > Advanced
-2. Select "Custom Nginx Configuration"
-3. Upload or paste the contents of `nginx.conf`
+1. In your service settings, add your domain
+2. Coolify will automatically handle SSL certificate generation
+3. Configure your DNS records to point to your Coolify instance
 
-### 6. Monitor the Deployment
+### 6. Deploy
 
-1. Check the deployment logs for any errors
-2. Verify your site is accessible at https://www.og-drip.com
-3. Test the API with a basic request to https://www.og-drip.com/api/health
+1. Click "Deploy" in Coolify
+2. Monitor the build and deployment process
+3. Once complete, your service will be available at your configured domain
 
-## Troubleshooting
+## Monitoring and Maintenance
 
-### CORS Issues
+### Logs
 
-If you encounter CORS issues:
+Access logs through the Coolify dashboard:
 
-1. Verify the `ENABLE_CORS` environment variable is set to `true`
-2. Check that the `BASE_URL` is set correctly to `https://www.og-drip.com`
-
-### Certificate Issues
-
-If you have SSL/TLS certificate issues:
-
-1. Ensure your DNS records are properly configured
-2. Check that both domains are registered in Coolify
-3. Verify that ports 80 and 443 are accessible
-
-### Volume Permissions
-
-If you have issues with file permissions:
-
-1. SSH into your Coolify server
-2. Check the permissions on the volume directories
-3. Run: `chmod -R 755 /path/to/volumes/outputs`
-
-## Maintenance
-
-### Backups
-
-1. Set up a regular backup schedule for your database and generated files
-2. The critical paths to back up are:
-   - `/app/data` - Database files
-   - `/app/outputs` - Generated images and HTML files
+1. Go to your service
+2. Click on "Logs"
+3. View real-time logs
 
 ### Updates
 
-When updating your application:
+To update your deployment:
 
-1. Make your changes to the codebase
-2. Push to your repository
-3. Redeploy through the Coolify dashboard
+1. Push changes to your repository
+2. Coolify will automatically detect changes
+3. A new deployment will start automatically
 
-## Monitoring
+### Backups
 
-Monitor your application health:
+Configure backups in Coolify for:
 
-1. Set up regular checks to `/api/health` endpoint
-2. Consider setting up alerts if the health check fails
-3. Monitor disk space on the volumes to ensure you don't run out of space
+- Database files
+- Generated images
+- Configuration
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Build Failures**
+
+   - Check build logs in Coolify
+   - Verify nixpacks.toml configuration
+   - Ensure all dependencies are properly specified
+
+2. **Runtime Errors**
+
+   - Check application logs
+   - Verify environment variables
+   - Check Chrome/Chromium installation
+
+3. **Performance Issues**
+   - Monitor resource usage in Coolify
+   - Consider scaling resources if needed
+   - Check database and file system usage
+
+## Security Considerations
+
+1. **Environment Variables**
+
+   - Use strong, unique ADMIN_TOKEN
+   - Keep sensitive variables secure
+   - Regularly rotate credentials
+
+2. **Access Control**
+
+   - Use HTTPS only
+   - Configure proper CORS settings
+   - Implement rate limiting if needed
+
+3. **File System**
+   - Monitor disk usage
+   - Implement cleanup routines
+   - Secure output directories
+
+## Support
+
+For additional help:
+
+- Check the [GitHub Issues](https://github.com/yourusername/ogdrip/issues)
+- Consult the [Coolify Documentation](https://docs.coolify.io)
+- Join the community discussions

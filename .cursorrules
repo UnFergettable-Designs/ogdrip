@@ -1,0 +1,157 @@
+# .cursorrules - Configuration for Cursor AI assistance
+
+version: 1.0
+
+# General project information
+project:
+  name: Open Graph Generator
+  type: monorepo
+  build_system: pnpm
+  components:
+    frontend:
+      stack: 
+        - nodejs
+        - pnpm
+        - astro
+        - svelte5
+      path: "./frontend"
+      description: "Astro+Svelte frontend with Node.js"
+    backend:
+      stack: 
+        - go
+        - chromedp
+        - sqlite
+      path: "./backend"
+      description: "Go backend for Open Graph image and metadata generation with SQLite storage"
+    shared:
+      path: "./shared"
+      description: "Shared TypeScript types and utilities"
+
+# Node.js monorepo configuration
+monorepo:
+  root_files:
+    - "package.json"
+  workspaces:
+    - "frontend"
+    - "shared"
+  tasks:
+    - name: "dev"
+      description: "Start all development servers"
+    - name: "build"
+      description: "Build all components"
+    - name: "test"
+      description: "Run tests for all components"
+    - name: "lint"
+      description: "Lint all components"
+
+# File patterns and associated rules
+patterns:
+  # Root configuration
+  - pattern: "package.json"
+    rules:
+      - "Define tasks for all components (frontend, backend)"
+      - "Include workspace settings for npm workspaces"
+      - "Provide composite tasks that run across the monorepo"
+  
+  # Frontend rules
+  - pattern: "frontend/**/*.astro"
+    rules:
+      - "Astro components must import Svelte components with .svelte extension"
+      - "Svelte components should use client:load directive for interactivity"
+      - "layout components should be imported from ../layouts/ directory"
+  
+  - pattern: "frontend/**/*.svelte"
+    rules:
+      - "Use Svelte 5 runes syntax with $state, $derived, etc."
+      - "Script tags should include lang=\"ts\" for TypeScript support"
+      - "Avoid using document or window directly, prefer Svelte lifecycle methods"
+  
+  - pattern: "frontend/package.json"
+    rules:
+      - "Must include appropriate npm dependencies for Astro and Svelte"
+      - "Scripts should include dev, build, preview, and lint commands"
+  
+  - pattern: "frontend/astro.config.mjs"
+    rules:
+      - "Must include svelte() integration from @astrojs/svelte"
+      - "Output should be set correctly for deployment"
+
+  # Backend rules
+  - pattern: "backend/**/*.go"
+    rules:
+      - "Use proper error handling with wrap mechanisms"
+      - "Standardize context passing through functions"
+      - "ChromeDP operations should have appropriate timeouts"
+      - "File operations should use correct path handling for cross-platform compatibility"
+      - "API endpoints should implement CORS for frontend access"
+      - "SQLite operations should include proper error handling and transaction support"
+  
+  - pattern: "backend/server.go"
+    rules:
+      - "Command-line flags should be properly documented"
+      - "Browser context must be properly cleaned up after operations"
+      - "Use consistent logging patterns throughout the application"
+      - "File outputs should include appropriate error handling"
+  
+  - pattern: "backend/database.go"
+    rules:
+      - "Database operations should be thread-safe"
+      - "Include proper error handling for all database operations"
+      - "Implement cleanup routines for removing old data"
+      - "Use prepared statements for SQL operations"
+
+  # Shared types
+  - pattern: "shared/**/*.ts"
+    rules:
+      - "Types should be exported for use in both frontend and backend"
+      - "Use consistent naming conventions across the monorepo"
+      - "Document complex types with JSDoc comments"
+  
+  - pattern: "shared/package.json"
+    rules:
+      - "Define tasks for type checking and linting"
+      - "Use imports for TypeScript types only (no runtime code)"
+
+  # Docker configuration
+  - pattern: "docker-compose.yml"
+    rules:
+      - "Frontend service should use Node.js image"
+      - "Backend service should expose API on port 8888"
+      - "Use volume mounts for persistent storage of generated images"
+      - "Define shared network for service communication"
+
+# Imports that should be enforced
+imports:
+  # Frontend imports
+  - name: "Svelte component imports in Astro"
+    pattern: "import .* from ['\"](.*/components/[^'\"]+)['\"]"
+    rule: "Must end with .svelte extension"
+    valid_example: 'import Component from "../components/Component.svelte"'
+    invalid_example: 'import Component from "../components/Component"'
+  
+  # Backend imports
+  - name: "Go standard imports"
+    pattern: "import \\("
+    rule: "Group standard library imports together, followed by third-party imports"
+    valid_example: |
+      import (
+        "context"
+        "fmt"
+        "log"
+        
+        "github.com/chromedp/chromedp"
+      )
+  
+  # Shared imports
+  - name: "Shared type imports"
+    pattern: "import .* from ['\"]../shared/.*['\"]"
+    rule: "Use consistent path for shared types"
+    valid_example: 'import type { OpenGraphRequest } from "../shared/types.ts"'
+
+# Commands to run
+commands:
+  setup: "npm install && cd backend && go mod tidy"
+  dev: "npm run dev"
+  build: "npm run build"
+  lint: "npm run lint"
+  test: "npm run test"

@@ -30,13 +30,10 @@ yarn-error.log*
 .node_repl_history
 
 # Build outputs
-# dist/ - Commented out to allow dist folder to be committed
+/frontend/dist/
+/frontend/dev-dist/
 .astro/
-.turbo/
-.cache/
-.output/
-.vercel/
-.netlify/
+**/*.local
 
 # Environment variables
 .env
@@ -53,7 +50,6 @@ yarn-error.log*
 *.swp
 *.swo
 *~
-.cursorrules
 
 # OS specific files
 .DS_Store
@@ -66,10 +62,6 @@ $RECYCLE.BIN/
 # Logs
 logs/
 *.log
-
-# Deno specific
-deno.lock
-.deno/
 
 # Project specific
 backend/outputs/
@@ -90,52 +82,6 @@ local-test/
 /backend/outputs/
 /backend/test_outputs/
 
-# Development artifacts
-/frontend/dist/
-/frontend/dev-dist/
-.astro/
-.turbo/
-**/.DS_Store
-.idea/
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-**/*.local
-**/*~
-
-# Docker test files
-/docker-build/alpine-root/
-/docker-build/alpine.tar
-/docker-build/alpine-minirootfs-*.tar.gz
-/docker-build/*.tmp
-
-# Dependencies
-node_modules/
-.pnp/
-.pnp.js
-.yarn/install-state.gz
-.svelte-kit
-package-lock.json
-
-# Environment files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.*.secrets
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
 # Databases
 backend/data/*.db
 backend/data/*.db-journal
@@ -155,20 +101,16 @@ playwright/.cache/
 /backend/outputs/
 **/temp/
 **/tmp/
-**/dist/
-**/build/
 .cache/
 
-# System files
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
+# Nixpacks
+.nixpacks/
 
-# Temporary test directories
-/ogdrip-test/
-/ogdrip-data/
-/ogdrip-output/
-~/ogdrip-test/
-~/ogdrip-data/
-~/ogdrip-output/
+# Temporary files
+*.tmp
+tmp/
+temp/
+
+# Keep Turborepo files
+.turbo/
+!turbo.json

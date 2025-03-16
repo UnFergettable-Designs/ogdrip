@@ -2,7 +2,5 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 echo "Running pre-commit hook..."
-echo "Building frontend with pnpm build..."
-
-# Navigate to the frontend directory from the git root
-cd "$(git rev-parse --show-toplevel)/frontend" && pnpm build
+# Add any lightweight checks here if needed in the future
+# For example: linting, type checking, etc.
