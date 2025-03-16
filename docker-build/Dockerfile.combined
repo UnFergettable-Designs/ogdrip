@@ -1,4 +1,5 @@
 # Multi-stage build for OG Drip application
+
 # Stage 1: Build frontend
 FROM node:22-slim AS frontend-builder
 
@@ -8,11 +9,11 @@ WORKDIR /build
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy the entire repository first
-COPY . .
+# Copy the frontend directory only
+COPY frontend/ ./frontend/
 
-# Install dependencies
-RUN pnpm install
+# Install dependencies for the frontend
+RUN cd frontend && pnpm install
 
 # Build the frontend
 RUN cd frontend && pnpm build
@@ -36,7 +37,7 @@ RUN apt-get update && apt-get install -y \
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download && go mod verify
 
-# Copy the rest of the source code
+# Copy the rest of the backend source code
 COPY backend/ ./
 
 # Build with CGO enabled
@@ -66,6 +67,8 @@ RUN mkdir -p /app/frontend /app/backend /app/outputs
 # Copy frontend build
 COPY --from=frontend-builder /build/frontend/dist/ /app/frontend/
 
+COPY --from=frontend-builder /build/frontend/package.json /app/frontend/package.json
+
 # Copy backend binary
 COPY --from=backend-builder /build/backend/ogdrip-backend /app/backend/
 
@@ -76,11 +79,11 @@ RUN chmod +x /app/backend/ogdrip-backend
 COPY docker-build/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Create minimal package.json for frontend
-RUN echo '{"name":"ogdrip-frontend","type":"module","dependencies":{"@sentry/astro":"9.5.0","@sentry/browser":"9.5.0","clsx":"2.1.1","cookie":"0.6.0","mime":"4.0.1"}}' > /app/frontend/package.json
+#RUN echo '{"name":"ogdrip-frontend","type":"module","dependencies":{"@sentry/astro":"9.5.0","@sentry/browser":"9.5.0","clsx":"2.1.1","cookie":"0.6.0","mime":"4.0.1"}}' > /app/frontend/package.json
 
 # Install frontend runtime dependencies
 RUN cd /app/frontend && \
-    npm install --production --no-fund --no-audit
+    pnpm install -P --prefer-offline
 
 # Expose ports
 EXPOSE 3000 8888
