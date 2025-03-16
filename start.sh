@@ -1,13 +1,16 @@
 #!/bin/bash
 set -e
 
-# Create necessary directories if they don't exist
-mkdir -p /app/outputs
-mkdir -p /app/data
+# Make script executable
+chmod +x start.sh
 
-# Start the backend with --service flag
+# Create necessary directories
+mkdir -p outputs
+mkdir -p data
+
+# Start the backend service
 cd backend
-./ogdrip-backend --service &
+./ogdrip-backend --service
 
 # Start the frontend in production mode
 cd ../frontend

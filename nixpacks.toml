@@ -1,25 +1,14 @@
 [phases.setup]
-nixPkgs = ["nodejs", "pnpm", "go", "gcc", "pkg-config", "sqlite", "chromium"]
+nixPkgs = ["go", "nodejs", "pnpm", "chromium"]
 
 [phases.install]
-packageManager = "pnpm@latest"
-cmds = [
-  "pnpm install --frozen-lockfile=false"
-]
+cmds = ["pnpm install"]
 
 [phases.build]
-cmds = [
-  "pnpm build"
-]
+cmds = ["pnpm build"]
 
 [start]
 cmd = "./start.sh"
 
 [variables]
-NODE_ENV = "production"
-CHROME_PATH = "/usr/bin/chromium"
-CHROME_FLAGS = "--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--headless,--disable-software-rasterizer"
-HOST = "0.0.0.0"
-
-[phases.setup.env]
-NIXPACKS_NODE_VERSION = "22"
+CHROME_PATH = "/nix/store/chromium/bin/chromium"
