@@ -54,9 +54,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Deploy to Coolify
-        uses: coolify-io/github-actions@main
-        with:
-          webhook_url: ${{ secrets.COOLIFY_WEBHOOK_URL }}
-          deployment_id: ${{ secrets.COOLIFY_DEPLOYMENT_ID }}
-          token: ${{ secrets.COOLIFY_TOKEN }}
+      - name: Trigger Coolify Deployment
+        run: |
+          curl -X POST ${{ secrets.COOLIFY_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{"token": "${{ secrets.COOLIFY_TOKEN }}"}'
