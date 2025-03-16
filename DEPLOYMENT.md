@@ -1,153 +1,126 @@
 # Deployment Guide
 
-This guide covers deploying OG Drip using Coolify and nixpacks.
+This guide explains how to deploy the Open Graph Generator service using Nixpacks.
 
 ## Prerequisites
 
-- A Coolify instance (self-hosted or cloud)
-- Git repository with your OG Drip fork
-- Domain name (recommended)
-
-## Environment Variables
-
-### Frontend (.env)
-
-```bash
-PUBLIC_BACKEND_URL=https://api.your-domain.com
-BACKEND_URL=https://api.your-domain.com
-```
-
-### Backend (.env)
-
-```bash
-PORT=8888
-ADMIN_TOKEN=your-secure-admin-token
-CHROME_PATH=/usr/bin/chromium
-DATABASE_PATH=./data/ogdrip.db
-OUTPUT_DIR=./outputs
-```
+- Git
+- Node.js 20.x or later
+- pnpm 8.x or later
+- Go 1.24 or later
+- SQLite 3.x
 
 ## Deployment Steps
 
-### 1. Prepare Your Repository
+1. Clone the repository:
 
-1. Fork or clone the OG Drip repository
-2. Update environment variables as needed
-3. Push your changes to your repository
+   ```bash
+   git clone https://github.com/yourusername/ogdrip.git
+   cd ogdrip
+   ```
 
-### 2. Set Up Coolify
+2. Install dependencies:
 
-1. Log into your Coolify dashboard
-2. Create a new project or select an existing one
-3. Click "New Service"
-4. Choose "Source: GitHub"
-5. Select your OG Drip repository
-6. Choose "Build Pack: Nixpacks"
+   ```bash
+   pnpm install
+   ```
 
-### 3. Configure Build Settings
+3. Build the application:
 
-The repository includes a `nixpacks.toml` file that configures the build process. No additional
-configuration is needed.
+   ```bash
+   pnpm build
+   ```
 
-### 4. Configure Environment Variables
+4. Set up environment variables:
 
-In Coolify's service settings, add the required environment variables:
+   - Copy `.env.example` to `.env` in both frontend and backend directories
+   - Update the values according to your environment
+   - Required variables:
 
-```bash
-# Frontend
-PUBLIC_BACKEND_URL=https://your-domain.com
-BACKEND_URL=https://your-domain.com
+     ```
+     # Frontend
+     PUBLIC_BACKEND_URL=http://localhost:8888
+     SENTRY_DSN=your-sentry-dsn (optional)
 
-# Backend
-PORT=8888
-ADMIN_TOKEN=your-secure-admin-token
-CHROME_PATH=/usr/bin/chromium
-DATABASE_PATH=./data/ogdrip.db
-OUTPUT_DIR=./outputs
-```
+     # Backend
+     PORT=8888
+     BASE_URL=http://localhost:8888
+     OUTPUT_DIR=./outputs
+     ENABLE_CORS=true
+     MAX_QUEUE_SIZE=10
+     ```
 
-### 5. Configure Domain and SSL
+5. Deploy using Nixpacks:
+   ```bash
+   nixpacks build . --name ogdrip
+   ```
 
-1. In your service settings, add your domain
-2. Coolify will automatically handle SSL certificate generation
-3. Configure your DNS records to point to your Coolify instance
+## Environment Variables
 
-### 6. Deploy
+### Frontend Variables
 
-1. Click "Deploy" in Coolify
-2. Monitor the build and deployment process
-3. Once complete, your service will be available at your configured domain
+- `PUBLIC_BACKEND_URL`: URL where the backend service is accessible
+- `SENTRY_DSN`: Sentry DSN for error tracking (optional)
+- `NODE_ENV`: Set to "production" for production builds
+- `PORT`: Port for the frontend service (default: 3000)
 
-## Monitoring and Maintenance
+### Backend Variables
 
-### Logs
+- `PORT`: Port for the backend service (default: 8888)
+- `BASE_URL`: Public URL where the backend service is accessible
+- `OUTPUT_DIR`: Directory for storing generated images
+- `ENABLE_CORS`: Enable CORS for cross-origin requests
+- `MAX_QUEUE_SIZE`: Maximum number of concurrent image generations
+- `SENTRY_DSN`: Sentry DSN for error tracking (optional)
 
-Access logs through the Coolify dashboard:
+## Health Checks
 
-1. Go to your service
-2. Click on "Logs"
-3. View real-time logs
+The service provides health check endpoints:
 
-### Updates
+- Frontend: `GET /health`
+- Backend: `GET /api/health`
 
-To update your deployment:
+## Monitoring
 
-1. Push changes to your repository
-2. Coolify will automatically detect changes
-3. A new deployment will start automatically
+1. Application logs are available through your platform's logging interface
 
-### Backups
+2. Error tracking is available through Sentry if configured
 
-Configure backups in Coolify for:
-
-- Database files
-- Generated images
-- Configuration
+3. Key metrics to monitor:
+   - HTTP response times
+   - Error rates
+   - Image generation queue size
+   - Disk usage for image storage
 
 ## Troubleshooting
 
-### Common Issues
+1. If the frontend can't connect to the backend:
 
-1. **Build Failures**
+   - Check that `PUBLIC_BACKEND_URL` is set correctly
+   - Verify the backend service is running
+   - Check network/firewall settings
 
-   - Check build logs in Coolify
-   - Verify nixpacks.toml configuration
-   - Ensure all dependencies are properly specified
+2. If image generation fails:
 
-2. **Runtime Errors**
+   - Verify Chromium is installed and accessible
+   - Check the `outputs` directory permissions
+   - Review backend logs for specific errors
 
-   - Check application logs
+3. For performance issues:
+   - Monitor the image generation queue size
+   - Check disk space in the outputs directory
+   - Review resource usage (CPU, memory)
+
+## Backup and Recovery
+
+1. Important data to backup:
+
+   - SQLite database in the backend's data directory
+   - Generated images in the outputs directory
+   - Environment configuration files
+
+2. Recovery steps:
+   - Restore the SQLite database file
+   - Restore the outputs directory
    - Verify environment variables
-   - Check Chrome/Chromium installation
-
-3. **Performance Issues**
-   - Monitor resource usage in Coolify
-   - Consider scaling resources if needed
-   - Check database and file system usage
-
-## Security Considerations
-
-1. **Environment Variables**
-
-   - Use strong, unique ADMIN_TOKEN
-   - Keep sensitive variables secure
-   - Regularly rotate credentials
-
-2. **Access Control**
-
-   - Use HTTPS only
-   - Configure proper CORS settings
-   - Implement rate limiting if needed
-
-3. **File System**
-   - Monitor disk usage
-   - Implement cleanup routines
-   - Secure output directories
-
-## Support
-
-For additional help:
-
-- Check the [GitHub Issues](https://github.com/yourusername/ogdrip/issues)
-- Consult the [Coolify Documentation](https://docs.coolify.io)
-- Join the community discussions
+   - Restart the services

@@ -1,16 +1,16 @@
 # Local Development Guide
 
-This guide covers setting up OG Drip for local development.
+This guide explains how to set up and run the Open Graph Generator service locally for development.
 
 ## Prerequisites
 
-- Node.js 20+ (22+ recommended)
-- Go 1.23+
-- pnpm
-- Chrome or Chromium browser
-- Git
+- Node.js 20.x or later
+- pnpm 8.x or later
+- Go 1.24 or later
+- SQLite 3.x
+- Chromium/Chrome (for backend image generation)
 
-## Initial Setup
+## Setup Steps
 
 1. Clone the repository:
 
@@ -25,217 +25,184 @@ This guide covers setting up OG Drip for local development.
    pnpm install
    ```
 
-3. Set up environment files:
+3. Set up environment variables:
 
    ```bash
-   # Frontend environment
+   # Frontend (.env)
    cp frontend/.env.example frontend/.env
 
-   # Backend environment
+   # Backend (.env)
    cp backend/.env.example backend/.env
    ```
 
-4. Configure environment variables:
-
-   **frontend/.env**:
+4. Start the development servers:
 
    ```bash
-   PUBLIC_BACKEND_URL=http://localhost:8888
-   BACKEND_URL=http://localhost:8888
+   # Start all services
+   pnpm dev:all
+
+   # Or start services individually:
+   pnpm dev:frontend  # Frontend only
+   pnpm dev:backend   # Backend only
    ```
 
-   **backend/.env**:
+## Development Environment
 
-   ```bash
-   PORT=8888
-   ADMIN_TOKEN=local-dev-token
-   CHROME_PATH=/path/to/your/chrome
-   DATABASE_PATH=./data/ogdrip.db
-   OUTPUT_DIR=./outputs
-   ```
+### Frontend (Astro + Svelte)
 
-## Development Workflow
+- Development server runs on port 3000
+- Hot module reloading enabled
+- TypeScript checking
+- ESLint + Prettier for code formatting
 
-### Starting the Development Servers
+### Backend (Go)
 
-1. Start all services:
+- Development server runs on port 8888
+- Live reloading with air (if installed)
+- SQLite database for storage
+- Swagger UI for API documentation
 
-   ```bash
-   pnpm dev
-   ```
-
-   This will start:
-
-   - Frontend at http://localhost:3000
-   - Backend at http://localhost:8888
-
-2. Or start services individually:
-
-   ```bash
-   # Frontend only
-   pnpm dev:frontend
-
-   # Backend only
-   pnpm dev:backend
-   ```
-
-### Development Commands
+## Available Scripts
 
 ```bash
-# Install dependencies
-pnpm install
+# Development
+pnpm dev:all         # Start all services
+pnpm dev:frontend    # Start frontend only
+pnpm dev:backend     # Start backend only
 
-# Start development servers
-pnpm dev
+# Building
+pnpm build           # Build all services
+pnpm build:frontend  # Build frontend only
+pnpm build:backend   # Build backend only
 
-# Build all packages
-pnpm build
+# Testing
+pnpm test           # Run all tests
+pnpm test:frontend  # Run frontend tests
+pnpm test:backend   # Run backend tests
 
-# Run tests
-pnpm test
-
-# Lint code
-pnpm lint
-
-# Preview production build
-pnpm preview
+# Linting
+pnpm lint          # Lint all code
+pnpm lint:fix      # Fix linting issues
 ```
 
-## Project Structure
+## Development Features
 
+### Hot Reloading
+
+- Frontend changes are automatically reflected
+- Backend requires restart for Go file changes
+- Static assets are served immediately
+
+### API Documentation
+
+- Swagger UI available at `/swagger`
+- OpenAPI spec at `/api/openapi.yaml`
+- Postman collection in `/docs`
+
+### Debugging
+
+1. Frontend:
+
+   - Browser DevTools
+   - Vite debugging tools
+   - Svelte DevTools extension
+
+2. Backend:
+   - Go debugger (delve)
+   - API logs in console
+   - SQLite database browser
+
+## Common Development Tasks
+
+### Adding Dependencies
+
+```bash
+# Frontend dependencies
+cd frontend
+pnpm add package-name
+
+# Backend dependencies
+cd backend
+go get package-name
 ```
-ogdrip/
-├── frontend/           # Astro + Svelte frontend
-│   ├── src/
-│   ├── public/
-│   └── package.json
-├── backend/           # Go backend service
-│   ├── cmd/
-│   ├── internal/
-│   └── go.mod
-├── shared/           # Shared TypeScript types
-│   └── src/
-└── package.json     # Root package.json
-```
 
-## Development Guidelines
+### Database Management
 
-### Code Style
-
-- Frontend: Uses Prettier and ESLint
-- Backend: Uses `gofmt` and `golangci-lint`
-- Shared: Uses Prettier and ESLint
-
-### Git Workflow
-
-1. Create a feature branch:
-
-   ```bash
-   git checkout -b feature/your-feature
-   ```
-
-2. Make your changes and commit:
-
-   ```bash
-   git add .
-   git commit -m "feat: your feature description"
-   ```
-
-3. Push and create a pull request:
-   ```bash
-   git push origin feature/your-feature
-   ```
+- SQLite database location: `backend/data/ogdrip.db`
+- Use SQLite browser for direct DB access
+- Backup: `cp backend/data/ogdrip.db backup.db`
 
 ### Testing
 
-1. Frontend tests:
+1. Unit Tests:
 
    ```bash
-   cd frontend
    pnpm test
    ```
 
-2. Backend tests:
+2. Integration Tests:
+
    ```bash
    cd backend
-   go test ./...
+   go test -v ./...
    ```
 
-## Debugging
+3. End-to-End Tests:
+   ```bash
+   pnpm test:e2e
+   ```
 
-### Frontend
+## Troubleshooting
 
-1. Use browser developer tools
-2. Check Vite/Astro development logs
-3. Enable Svelte debugging in browser devtools
+### Frontend Issues
 
-### Backend
-
-1. Use Go debugging tools:
+1. Module not found:
 
    ```bash
-   # Run with delve
-   dlv debug ./cmd/ogdrip
-
-   # Or use VS Code Go debugger
+   pnpm install  # Reinstall dependencies
    ```
 
-2. Check logs:
+2. TypeScript errors:
    ```bash
-   tail -f backend/logs/ogdrip.log
+   pnpm clean    # Clean build cache
+   pnpm build    # Rebuild
    ```
 
-## Common Issues
+### Backend Issues
 
-### Frontend
+1. Database errors:
 
-1. **Module not found errors**
+   ```bash
+   rm backend/data/ogdrip.db  # Remove corrupt DB
+   go run main.go             # New DB will be created
+   ```
 
-   - Run `pnpm install`
-   - Clear `.astro` cache
-   - Check import paths
+2. Chrome/Chromium not found:
+   - Set CHROME_PATH in backend/.env
+   - Install Chrome/Chromium if missing
 
-2. **Hot reload not working**
-   - Check file watchers limit
-   - Restart dev server
+## Best Practices
 
-### Backend
+1. Code Style
 
-1. **Chrome/Chromium issues**
+   - Follow existing patterns
+   - Use TypeScript for frontend
+   - Format with prettier/gofmt
+   - Run linters before committing
 
-   - Verify CHROME_PATH in .env
-   - Check Chrome installation
-   - Ensure proper permissions
+2. Testing
 
-2. **Database errors**
-   - Check DATABASE_PATH permissions
-   - Verify SQLite installation
-   - Check disk space
+   - Write tests for new features
+   - Update existing tests
+   - Run full test suite before PR
 
-## Performance Optimization
+3. Git Workflow
 
-### Frontend
+   - Branch from main
+   - Use descriptive commit messages
+   - Keep PRs focused and small
 
-1. Use dynamic imports for large components
-2. Optimize images and assets
-3. Enable proper caching strategies
-
-### Backend
-
-1. Use connection pooling
-2. Implement proper caching
-3. Optimize Chrome instances
-
-## Security Best Practices
-
-1. Keep dependencies updated
-2. Use environment variables for secrets
-3. Implement proper input validation
-4. Follow security headers best practices
-
-## Additional Resources
-
-- [Astro Documentation](https://docs.astro.build)
-- [Svelte Documentation](https://svelte.dev/docs)
-- [Go Documentation](https://golang.org/doc/)
-- [ChromeDP Documentation](https://pkg.go.dev/github.com/chromedp/chromedp)
+4. Performance
+   - Optimize image sizes
+   - Use proper caching
+   - Monitor memory usage
