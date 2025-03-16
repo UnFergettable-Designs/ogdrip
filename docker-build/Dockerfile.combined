@@ -10,13 +10,16 @@ WORKDIR /build
 RUN npm install -g pnpm
 
 # Copy the frontend directory only
-COPY frontend/ ./frontend/
+COPY frontend/ ./frontend
+
+# Debug: List contents of the frontend directory
+RUN ls -la frontend
 
 # Install dependencies for the frontend
-RUN cd frontend && pnpm install
+RUN pnpm install
 
 # Build the frontend
-RUN cd frontend && pnpm build
+RUN pnpm build
 
 # Stage 2: Build backend
 FROM golang:1.24-bullseye AS backend-builder
