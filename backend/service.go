@@ -1022,11 +1022,14 @@ func StartAPIService(port string) {
 		log.Printf("Using port from environment: %s", port)
 	}
 
-	// Create a mux for the API endpoints
 	mux := http.NewServeMux()
+
+	// Set up static file serving
+	setupStaticFileServing(mux)
 
 	// API endpoints
 	mux.HandleFunc("/api/generate", handleGenerateRequest)
+	mux.HandleFunc("/api/get/", handleGetGenerationRequest)
 	mux.HandleFunc("/api/download/", handleDownloadRequest)
 	mux.HandleFunc("/api/health", handleHealthCheck)
 	mux.HandleFunc("/api/admin/verify", handleAdminVerify)
@@ -1053,9 +1056,6 @@ func StartAPIService(port string) {
 	if sentryInitialized {
 		handler = sentryHandler(handler)
 	}
-
-	// Set up paths for serving static files
-	setupStaticFileServing(mux)
 
 	log.Printf("API Server starting on port %s...", port)
 	if err := http.ListenAndServe(":"+port, handler); err != nil {
@@ -1174,18 +1174,10 @@ func getOutputDir() string {
 
 // StartCleanupTask starts the periodic cleanup task
 func StartCleanupTask(db *Database) {
-	// Create a ticker to run cleanup every hour
+	// Run cleanup every hour
 	ticker := time.NewTicker(1 * time.Hour)
 
-	// Run cleanup in a goroutine
 	go func() {
-		log.Printf("Starting cleanup task")
-
-		// Run initial cleanup
-		if err := db.RunCleanup(); err != nil {
-			log.Printf("Error running initial cleanup: %v", err)
-		}
-
 		// Run cleanup on the ticker interval
 		for range ticker.C {
 			log.Printf("Running scheduled cleanup")
@@ -1195,3 +1187,4 @@ func StartCleanupTask(db *Database) {
 		}
 	}()
 }
+

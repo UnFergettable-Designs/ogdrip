@@ -4,8 +4,8 @@
   "private": true,
   "description": "Go backend for Open Graph image generation (no Node dependencies required)",
   "scripts": {
-    "dev": "go run main.go server.go service.go database.go sentry.go -service",
-    "dev:backend": "go run main.go server.go service.go database.go sentry.go -service",
+    "dev": "go run main.go server.go service.go database.go sentry.go swagger.go -service",
+    "dev:backend": "go run main.go server.go service.go database.go sentry.go swagger.go -service",
     "build": "mkdir -p ./build && go build -o ./build/ogdrip-backend *.go",
     "predev": "mkdir -p ./build && go build -o ./build/ogdrip-backend *.go",
     "prebuild": "mkdir -p ./build && go build -o ./build/ogdrip-backend *.go",
