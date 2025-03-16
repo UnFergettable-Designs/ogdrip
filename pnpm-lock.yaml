@@ -67,15 +67,9 @@ importers:
       astro:
         specifier: ^5.5.2
         version: 5.5.2(@types/node@22.13.10)(rollup@4.35.0)(typescript@5.8.2)(yaml@2.7.0)
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
       esm-env:
         specifier: ^1.2.2
         version: 1.2.2
-      p-limit:
-        specifier: ^6.2.0
-        version: 6.2.0
       svelte:
         specifier: ^5.23.0
         version: 5.23.0
