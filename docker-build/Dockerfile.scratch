@@ -1,0 +1,26 @@
+# Start with nothing
+FROM scratch
+
+# Create filesystem structure
+WORKDIR /
+
+# Add a basic shell (using busybox)
+COPY docker-build/busybox /bin/busybox
+RUN ["/bin/busybox", "--install", "-s", "/bin"]
+
+# Set up runtime environment
+RUN mkdir -p /app/frontend /app/backend /app/outputs /var/log/supervisor
+
+# Copy our application components
+COPY frontend/dist/ /app/frontend/
+COPY backend/ogdrip-backend /app/backend/
+COPY docker-build/run.sh /app/run.sh
+
+# Make scripts executable
+RUN chmod +x /app/backend/ogdrip-backend /app/run.sh
+
+# Expose ports
+EXPOSE 3000 8888
+
+# Set entrypoint
+CMD ["/app/run.sh"]

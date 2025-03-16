@@ -1,95 +1,178 @@
-# Open Graph Generator
+# Open Graph Generator (OG Drip)
 
-A powerful tool for generating Open Graph images and meta tags for your websites and applications.
+Generate beautiful, customizable Open Graph images and metadata for your web content.
+
+![OG Drip Logo](ogdrip_logo.svg)
 
 ## Features
 
-- Generate beautiful Open Graph images from URLs
-- Create meta tags for social media sharing
-- Customize titles, descriptions, and visual elements
-- Admin dashboard for tracking generations
-- API for integration with your applications
-- Downloadable assets (images, HTML, and ZIP packages)
+- Generate Open Graph images and meta tags for social media sharing
+- Customizable templates and layouts
+- Web-based UI for creating and managing Open Graph assets
+- API for programmatic generation
+- Multiple export options (PNG, HTML, ZIP)
+- History tracking of generated assets
+
+## Project Structure
+
+This is a monorepo containing:
+
+- **Frontend**: Astro + Svelte5 app
+- **Backend**: Go API with Chrome automation
+- **Shared**: TypeScript types shared between frontend and backend
 
 ## Quick Start
 
-The quickest way to get started is to use Docker Compose:
+### Option 1: Run with Docker (Recommended)
+
+The easiest way to run OG Drip is using Docker:
 
 ```bash
-git clone https://github.com/your-username/ogdrip.git
+# Clone the repository
+git clone https://github.com/yourusername/ogdrip.git
 cd ogdrip
-docker compose up
+
+# Build and run with Docker
+./docker-build/docker-build.sh
 ```
 
-Then visit http://localhost:3000 in your browser.
+Once running, access:
 
-## Requirements
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8888/api/health
 
-- Docker and Docker Compose (for containerized setup)
-- Go v1.23 or later (for manual backend setup)
-- Node.js v18 or later (for manual frontend setup)
-- pnpm (for manual frontend setup)
-- Chrome/Chromium (for headless browser functionality)
+### Option 2: Manual Setup
 
-## Documentation
+#### Prerequisites
 
-- [Local Deployment Guide](LOCAL_DEPLOYMENT.md) - How to run the application locally
-- [Production Deployment Guide](DEPLOYMENT.md) - How to deploy to production environments
+- Node.js 18+
+- Go 1.21+
+- PNPM
+- Chrome/Chromium browser
 
-## Architecture
+#### Steps
 
-The Open Graph Generator consists of two main components:
-
-1. **Frontend**: Built with Astro and Svelte
-
-   - User interface for creating Open Graph assets
-   - Preview functionality
-   - Admin dashboard
-
-2. **Backend**: Built with Go
-   - API for generating Open Graph images
-   - Headless Chrome integration for rendering
-   - SQLite database for tracking generations
-
-## API Usage
-
-### Generate Open Graph Assets
+1. **Clone and set up the repository**
 
 ```bash
-curl -X POST \
-  -F "url=https://example.com" \
-  -F "title=Example Title" \
-  -F "description=Example Description" \
-  http://localhost:8888/api/generate
+git clone https://github.com/yourusername/ogdrip.git
+cd ogdrip
+pnpm install
 ```
 
-Response:
+2. **Run the backend**
+
+```bash
+cd backend
+go mod download
+go build -o ogdrip-backend .
+./ogdrip-backend -service
+```
+
+3. **Run the frontend**
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+## Development Guide
+
+### Build and Development Commands
+
+**Frontend:**
+
+```bash
+cd frontend
+pnpm install     # Install dependencies
+pnpm dev         # Start development server
+pnpm build       # Build for production
+pnpm preview     # Preview production build
+```
+
+**Backend:**
+
+```bash
+cd backend
+go mod download          # Download dependencies
+go build -o ogdrip-backend .  # Build the binary
+./ogdrip-backend -service     # Run API service
+```
+
+### Deployment to GitHub
+
+1. Fork or clone this repository
+2. Update the `.env.production` files with your configuration
+3. Push your changes to GitHub
+4. The project is ready to be deployed from GitHub using:
+   - GitHub Actions
+   - Coolify
+   - Any Docker-based deployment platform
+
+### Docker Deployment
+
+1. Build the Docker images:
+
+```bash
+./docker-build/docker-build.sh
+```
+
+2. Push to your Docker registry:
+
+```bash
+docker tag ogdrip_frontend:latest yourusername/ogdrip-frontend:latest
+docker tag ogdrip_backend:latest yourusername/ogdrip-backend:latest
+docker push yourusername/ogdrip-frontend:latest
+docker push yourusername/ogdrip-backend:latest
+```
+
+3. Deploy using docker-compose.production.yml
+
+## API Documentation
+
+OG Drip provides comprehensive API documentation through Swagger UI.
+
+- **Interactive API Documentation**: Visit `/docs/` or `/swagger/` when the backend is running
+- **OpenAPI Specification**: Available at `/api/openapi.yaml`
+
+### Generate Open Graph Image and Meta Tags
+
+```
+POST /api/generate
+```
+
+**Parameters:**
+
+- `url`: Target URL to capture
+- `title`: Title for the OG image
+- `description`: Description text
+- `imageType`: Type of image (basic, gradient, etc)
+- `width`: Image width in pixels (default: 1200)
+- `height`: Image height in pixels (default: 630)
+
+**Response:**
 
 ```json
 {
   "success": true,
   "message": "Open Graph assets generated successfully",
-  "image_url": "http://localhost:8888/outputs/abc123_og_image.png",
-  "meta_tags_url": "http://localhost:8888/outputs/abc123_og_meta.html",
-  "preview_url": "http://localhost:8888/preview/abc123",
-  "zip_url": "http://localhost:8888/api/download/abc123_og_package.zip",
-  "id": "abc123"
+  "image_url": "http://localhost:8888/files/image_id.png",
+  "meta_tags_url": "http://localhost:8888/files/meta_id.html",
+  "zip_url": "http://localhost:8888/api/download-zip?file=image_id.png&file=meta_id.html",
+  "html_content": "...",
+  "id": "unique_identifier"
 }
 ```
 
-## Contributing
+## Configuration
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+See [DEPLOYMENT.md](DEPLOYMENT.md) and [LOCAL_DEPLOYMENT.md](LOCAL_DEPLOYMENT.md) for detailed
+configuration options.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+[MIT License](LICENSE)
 
 ## Acknowledgments
 

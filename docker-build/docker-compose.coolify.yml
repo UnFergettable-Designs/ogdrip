@@ -1,0 +1,35 @@
+services:
+  ogdrip:
+    # Replace with your actual GitHub username (lowercase)
+    image: ghcr.io/unfergettable-designs/ogdrip:latest
+    ports:
+      - '3000:3000' # Frontend port
+      - '8888:8888' # Backend API port
+    volumes:
+      - ogdrip_data:/app/outputs
+    environment:
+      # External URLs when deployed - will be overridden in production
+      - PUBLIC_BACKEND_URL=http://localhost:8888
+      - BACKEND_URL=http://localhost:8888
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8888/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      # Caddy reverse proxy labels for Coolify
+      - coolify.enable=true
+      - coolify.subdomain=ogdrip
+      - coolify.cors=true
+      - coolify.custom_domain=true
+      - coolify.custom_domain_names=ogdrip.unfergettable.design
+      - coolify.custom_domain_https=true
+      - coolify.custom_domain_https_redirect=true
+      - coolify.custom_domain_https_force=true
+      - coolify.custom_domain_https_cert_type=letsencrypt
+      - coolify.custom_domain_https_cert_email=john@unfergettable.design
+
+volumes:
+  ogdrip_data:

@@ -1035,6 +1035,9 @@ func StartAPIService(port string) {
 	mux.HandleFunc("/api/history", verifyAdminToken(handleHistoryRequest))
 	mux.HandleFunc("/api/history/", verifyAdminToken(handleGenerationDetailsRequest))
 
+	// Set up Swagger UI for API documentation
+	setupSwagger(mux)
+
 	// Enable CORS
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"}, // Allowing all origins for now
