@@ -2,14 +2,14 @@
 nixPkgs = ["nodejs", "pnpm", "go", "gcc", "pkg-config", "sqlite", "chromium"]
 
 [phases.install]
+packageManager = "pnpm@latest"
 cmds = [
   "pnpm install"
 ]
 
 [phases.build]
 cmds = [
-  "cd frontend && NODE_ENV=production pnpm build",
-  "cd ../backend && CGO_ENABLED=1 go build -v -o ogdrip-backend ."
+  "pnpm build"
 ]
 
 [start]
