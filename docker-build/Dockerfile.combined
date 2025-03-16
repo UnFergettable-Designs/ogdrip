@@ -8,20 +8,11 @@ WORKDIR /build
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy root package files first
-COPY package.json pnpm-lock.yaml ./
-COPY pnpm-workspace.yaml ./
-
-# Copy frontend package files
-COPY frontend/package.json ./frontend/
-COPY shared/package.json ./shared/
+# Copy the entire repository first
+COPY . .
 
 # Install dependencies
 RUN pnpm install
-
-# Copy the rest of the source code
-COPY frontend/ ./frontend/
-COPY shared/ ./shared/
 
 # Build the frontend
 RUN cd frontend && pnpm build
