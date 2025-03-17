@@ -1,5 +1,9 @@
 [phases.setup]
 nixPkgs = ["nodejs_22", "go_1_22"]
+cmds = [
+  "corepack enable",
+  "corepack prepare pnpm@latest --activate"
+]
 
 [phases.install]
 cmds = [
@@ -20,3 +24,5 @@ NODE_ENV = "production"
 GO111MODULE = "on"
 GOTOOLCHAIN = "local"
 NODE_OPTIONS = "--max-old-space-size=4096"
+PNPM_HOME = "/root/.local/share/pnpm"
+PATH = "/root/.local/share/pnpm:${PATH}"
