@@ -6,8 +6,9 @@ packageManager = "pnpm@latest"
 cmds = [
   "corepack enable",
   "corepack prepare pnpm@latest --activate",
-  "pnpm install --frozen-lockfile",
-  "cd backend && go mod download"
+  "pnpm install --frozen-lockfile=false",
+  "cd ../frontend && pnpm install",
+  "cd ../backend && go mod download"
 ]
 
 [phases.build]
