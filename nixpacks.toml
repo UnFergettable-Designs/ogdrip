@@ -1,13 +1,22 @@
 [phases.setup]
-nixPkgs = ["go", "nodejs", "pnpm", "chromium"]
+nixPkgs = ["nodejs_22", "go_1_22"]
 
 [phases.install]
 cmds = [
-  "pnpm install --recursive --shamefully-hoist"
+  "pnpm install --frozen-lockfile"
 ]
 
 [phases.build]
-cmds = ["pnpm build"]
+cmds = [
+  "pnpm build",
+  "cd backend && go build -o build/ogdrip-backend *.go"
+]
 
 [start]
 cmd = "./start.sh"
+
+[variables]
+NODE_ENV = "production"
+GO111MODULE = "on"
+GOTOOLCHAIN = "local"
+NODE_OPTIONS = "--max-old-space-size=4096"
