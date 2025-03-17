@@ -10,7 +10,7 @@ cd backend && go run . &
 BACKEND_PID=$!
 
 # Start the frontend server
-cd ../frontend && pnpm start
+cd /app/frontend && pnpm start
 
 # If frontend exits, kill the backend
 kill $BACKEND_PID
