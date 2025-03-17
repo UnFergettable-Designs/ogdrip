@@ -1,0 +1,22 @@
+[phases.setup]
+nixPkgs = ["go_1_23", "nodejs_22", "pnpm"]
+
+[phases.install]
+cmds = [
+  "pnpm install --frozen-lockfile",
+  "cd backend && go mod download"
+]
+
+[phases.build]
+cmds = [
+  "pnpm build"
+]
+
+[start]
+cmd = "./start.sh"
+
+[variables]
+NODE_ENV = "production"
+GO111MODULE = "on"
+GOTOOLCHAIN = "local"
+NODE_OPTIONS = "--max-old-space-size=4096"

@@ -1,6 +1,8 @@
-module mymodule
+module github.com/unfergettable-designs/ogdrip/backend
 
 go 1.24
+
+toolchain go1.24.1
 
 require (
 	github.com/chromedp/chromedp v0.11.1
