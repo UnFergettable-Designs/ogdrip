@@ -2,13 +2,12 @@
 nixPkgs = ["go", "nodejs", "pnpm", "chromium"]
 
 [phases.install]
-cmds = ["pnpm install"]
+cmds = [
+  "pnpm install --recursive --shamefully-hoist"
+]
 
 [phases.build]
 cmds = ["pnpm build"]
 
 [start]
 cmd = "./start.sh"
-
-[variables]
-CHROME_PATH = "/nix/store/chromium/bin/chromium"
