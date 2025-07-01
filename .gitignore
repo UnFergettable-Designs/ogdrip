@@ -15,6 +15,7 @@ local-test/
 .env
 .env.*
 !.env.example
+!.env.production
 
 # IDE and editor files
 .idea/
@@ -59,3 +60,7 @@ outputs/
 backend/outputs/
 backend/data/*.db
 backend/data/*.db-journal
+
+# Go build artifacts
+backend/ogdrip-backend
+backend/build/ogdrip-backend

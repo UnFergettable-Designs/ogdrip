@@ -4,10 +4,18 @@
     "name": "Open Graph Generator",
     "description": "A service to generate Open Graph images and metadata",
     "domains": ["www.og-drip.com", "og-drip.com"],
-    "builder": "docker-compose",
-    "buildCommand": "docker-compose -f docker-compose.production.yml build",
-    "startCommand": "docker-compose -f docker-compose.production.yml up -d",
-    "stopCommand": "docker-compose -f docker-compose.production.yml down",
+    "builder": "nixpacks",
+    "buildCommand": "nixpacks build . --name ogdrip",
+    "startCommand": "./start.sh",
+    "stopCommand": "./process-manager.sh stop",
+    "healthCheck": {
+      "path": "/api/health",
+      "port": 8888,
+      "interval": 30,
+      "timeout": 10,
+      "retries": 3,
+      "startPeriod": 60
+    },
     "volumes": [
       {
         "name": "outputs",
@@ -18,6 +26,11 @@
         "name": "database",
         "path": "/app/data",
         "persistent": true
+      },
+      {
+        "name": "logs",
+        "path": "/app/logs",
+        "persistent": true
       }
     ],
     "environmentFiles": [
@@ -26,18 +39,33 @@
         "path": "./backend/.env.production"
       },
       {
-        "name": "Frontend Environment",
+        "name": "Frontend Environment", 
         "path": "./frontend/.env.production"
       }
     ],
-    "healthCheck": {
-      "path": "/api/health",
-      "port": 8888
-    },
     "ssl": {
       "provider": "letsencrypt",
       "email": "your-email@example.com",
       "staging": false
+    },
+    "resources": {
+      "limits": {
+        "memory": "2G",
+        "cpu": "2"
+      },
+      "reservations": {
+        "memory": "1G",
+        "cpu": "1"
+      }
+    },
+    "restart": {
+      "policy": "unless-stopped",
+      "maxRetries": 3
+    },
+    "monitoring": {
+      "enabled": true,
+      "healthCheckScript": "./healthcheck.sh",
+      "processManager": "./process-manager.sh"
     }
   }
 } 
