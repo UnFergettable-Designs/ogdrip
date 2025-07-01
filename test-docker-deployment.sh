@@ -39,7 +39,7 @@ else
     exit 1
 fi
 
-if grep -q "FROM golang:1.22-alpine AS backend-builder" Dockerfile; then
+if grep -q "FROM golang:1.24-alpine AS backend-builder" Dockerfile; then
     echo "  ✓ Backend builder stage defined"
 else
     echo "  ✗ Backend builder stage missing"

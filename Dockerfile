@@ -24,7 +24,7 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm turbo build --filter=@ogdrip/shared --filter=@ogdrip/frontend
 
 # Stage 2: Backend Builder  
-FROM golang:1.22-alpine AS backend-builder
+FROM golang:1.24-alpine AS backend-builder
 
 # Set working directory
 WORKDIR /app
