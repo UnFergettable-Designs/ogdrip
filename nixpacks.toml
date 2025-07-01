@@ -7,9 +7,11 @@ nixPkgs = [
   "fontconfig",
   "freetype",
   "liberation_ttf",
-  "dejavu_fonts"
+  "dejavu_fonts",
+  "git"
 ]
 cmds = [
+  "git submodule update --init --recursive",
   "corepack enable",
   "corepack prepare pnpm@latest --activate"
 ]
