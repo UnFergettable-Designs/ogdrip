@@ -22,8 +22,7 @@ cmds = [
 [phases.build]
 cmds = [
   "pnpm build",
-  "cd backend && mkdir -p build",
-  "cd backend && go build -o build/ogdrip-backend *.go",
+  "cd backend && mkdir -p build && go build -o build/ogdrip-backend *.go",
   "chmod +x backend/build/ogdrip-backend"
 ]
 
