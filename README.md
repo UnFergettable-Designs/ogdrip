@@ -17,7 +17,7 @@ A modern, efficient service for generating Open Graph images and metadata for yo
 - **Backend**: Go with ChromeDP
 - **Database**: SQLite
 - **Build System**: Turborepo + pnpm
-- **Deployment**: Coolify with nixpacks
+- **Deployment**: Docker, Coolify with nixpacks
 
 ## Quick Start
 
@@ -64,6 +64,28 @@ This is a monorepo managed with Turborepo and pnpm workspaces. The main componen
 - `pnpm lint` - Lint all packages
 
 ## Deployment
+
+This project supports multiple deployment options:
+
+### Option 1: Docker Deployment (Recommended)
+
+Deploy both frontend and backend as a single container using the multi-stage Dockerfile.
+
+```bash
+# Quick start with Docker Compose
+docker-compose up -d
+
+# Or build and run manually
+docker build -f Dockerfile.production -t ogdrip:prod .
+docker run -p 8888:8888 -p 3000:3000 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/outputs:/app/outputs \
+  ogdrip:prod
+```
+
+See [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md) for detailed Docker deployment instructions.
+
+### Option 2: Coolify with nixpacks
 
 This project is designed to be deployed on Coolify using nixpacks.
 
