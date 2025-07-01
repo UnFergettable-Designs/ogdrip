@@ -11,7 +11,8 @@ nixPkgs = [
   "git"
 ]
 cmds = [
-  "git submodule update --init --recursive",
+  "git submodule sync --recursive",
+  "git submodule update --init --recursive --force",
   "corepack enable",
   "corepack prepare pnpm@latest --activate"
 ]
