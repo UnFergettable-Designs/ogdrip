@@ -1,0 +1,62 @@
+# Git files
+.git
+.gitignore
+.gitmodules
+
+# Build artifacts
+dist/
+build/
+.turbo/
+.astro/
+coverage/
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.production
+
+# IDE files
+.vscode/
+.cursor/
+.idx/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+docs/
+frontend_docs/
+backend_docs/
+
+# Test files
+**/*.test.*
+**/*.spec.*
+test/
+tests/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Husky hooks
+.husky/
+
+# Editor backups
+*~
+*.swp
+*.swo
+
+# Local development
+.nvmrc
+.tool-versions
