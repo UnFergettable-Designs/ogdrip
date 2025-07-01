@@ -43,7 +43,7 @@ fi
 # Check if frontend exists and has package.json
 if [ -f "frontend/package.json" ]; then
     echo "Starting frontend server..."
-    cd /app/frontend && pnpm start &
+    cd frontend && pnpm start &
     FRONTEND_PID=$!
     echo "Frontend started with PID: $FRONTEND_PID"
     
