@@ -157,8 +157,13 @@ cleanup() {
     fi
     
     # Kill any orphaned processes
-    pkill -f "ogdrip-backend" 2>/dev/null || true
-    pkill -f "chromium.*ogdrip" 2>/dev/null || true
+    pkill -f "^ogdrip-backend$" 2>/dev/null || true
+    pgrep -f "chromium.*ogdrip" | while read -r pid; do
+        cmdline=$(tr '\0' ' ' < /proc/$pid/cmdline)
+        if [[ "$cmdline" == *"--ogdrip-specific-flag"* ]]; then
+            kill "$pid"
+        fi
+    done 2>/dev/null || true
     
     log "${GREEN}✓ Cleanup completed${NC}"
 }
