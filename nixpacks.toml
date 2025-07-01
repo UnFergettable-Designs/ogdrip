@@ -1,7 +1,7 @@
 [phases.setup]
 nixPkgs = [
-  "nodejs_22", 
-  "go_1_22",
+  "nodejs_22",
+  "go_1_24",
   "chromium",
   "font-manager",
   "fontconfig",
