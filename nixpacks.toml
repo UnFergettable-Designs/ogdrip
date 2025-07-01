@@ -1,5 +1,14 @@
 [phases.setup]
-nixPkgs = ["nodejs_22", "go_1_22"]
+nixPkgs = [
+  "nodejs_22", 
+  "go_1_22",
+  "chromium",
+  "font-manager",
+  "fontconfig",
+  "freetype",
+  "liberation_ttf",
+  "dejavu_fonts"
+]
 cmds = [
   "corepack enable",
   "corepack prepare pnpm@latest --activate"
@@ -13,7 +22,9 @@ cmds = [
 [phases.build]
 cmds = [
   "pnpm build",
-  "cd backend && go build -o build/ogdrip-backend *.go"
+  "cd backend && mkdir -p build",
+  "cd backend && go build -o build/ogdrip-backend *.go",
+  "chmod +x backend/build/ogdrip-backend"
 ]
 
 [start]
@@ -26,3 +37,6 @@ GOTOOLCHAIN = "local"
 NODE_OPTIONS = "--max-old-space-size=4096"
 PNPM_HOME = "/root/.local/share/pnpm"
 PATH = "/root/.local/share/pnpm:${PATH}"
+CHROME_PATH = "/nix/store/*-chromium-*/bin/chromium"
+DISPLAY = ":99"
+FONTCONFIG_PATH = "/etc/fonts"
