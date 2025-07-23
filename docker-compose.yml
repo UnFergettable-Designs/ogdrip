@@ -5,23 +5,111 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.production
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: ogdrip:latest
+    container_name: ogdrip
     ports:
-      - "8888:8888"
-      - "3000:3000"
+      - "8888:8888"   # Backend API
+      - "3000:3000"   # Frontend (if served separately)
     environment:
+      # Core Configuration
       - NODE_ENV=production
-      - BASE_URL=http://localhost:8888
-      - CHROME_PATH=/usr/bin/chromium
       - GO111MODULE=on
       - GOTOOLCHAIN=local
+      
+      # Backend Configuration
+      - PORT=8888
+      - HOST=0.0.0.0
+      - BASE_URL=${BASE_URL:-http://localhost:8888}
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8888}
+      - BACKEND_URL=${BACKEND_URL:-http://localhost:8888}
+      
+      # Database
+      - DATABASE_PATH=/app/data/ogdrip.db
+      
+      # Security
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-change-this-in-production}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8888}
+      
+      # Browser Configuration
+      - CHROME_PATH=/usr/bin/chromium
+      - BROWSER_TIMEOUT=${BROWSER_TIMEOUT:-60}
+      - MAX_CONCURRENT_GENERATIONS=${MAX_CONCURRENT_GENERATIONS:-3}
+      - DISPLAY=:99
+      
+      # Performance
       - NODE_OPTIONS=--max-old-space-size=4096
+      - GOGC=100
+      
+      # Rate Limiting
+      - RATE_LIMIT_REQUESTS=${RATE_LIMIT_REQUESTS:-100}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-3600}
+      
+      # Optional: Monitoring
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    
     volumes:
-      - ./data:/app/data
-      - ./outputs:/app/outputs
+      # Persistent data
+      - ogdrip_data:/app/data
+      - ogdrip_outputs:/app/outputs
+      - ogdrip_logs:/app/logs
+      
+      # Optional: Custom fonts
+      - ./fonts:/usr/share/fonts/custom:ro
+    
+    networks:
+      - ogdrip_network
+    
     restart: unless-stopped
+    
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8888/api/health"]
+      test: ["CMD", "/app/healthcheck.sh"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    
+    labels:
+      - "com.ogdrip.service=main"
+      - "com.ogdrip.version=1.0.0"
+      - "traefik.enable=true"
+      - "traefik.http.routers.ogdrip.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.ogdrip.tls=true"
+      - "traefik.http.routers.ogdrip.tls.certresolver=letsencrypt"
+      - "traefik.http.services.ogdrip.loadbalancer.server.port=8888"
+
+networks:
+  ogdrip_network:
+    driver: bridge
+    labels:
+      - "com.ogdrip.network=main"
+
+volumes:
+  ogdrip_data:
+    driver: local
+    labels:
+      - "com.ogdrip.volume=data"
+      - "com.ogdrip.backup=true"
+  
+  ogdrip_outputs:
+    driver: local
+    labels:
+      - "com.ogdrip.volume=outputs" 
+      - "com.ogdrip.backup=false"  # Can be regenerated
+  
+  ogdrip_logs:
+    driver: local
+    labels:
+      - "com.ogdrip.volume=logs"
+      - "com.ogdrip.backup=false"

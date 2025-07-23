@@ -1,10 +1,97 @@
 # Docker Deployment Guide
 
-This guide explains how to deploy the OG Drip application using Docker with the multi-stage Dockerfile approach.
+This guide explains how to deploy the OG Drip application using Docker and Docker Compose with comprehensive configuration options.
 
 ## Overview
 
-The multi-stage Dockerfile enables deployment of the entire application stack (Go backend and Astro frontend) as a single unit. This approach simplifies the deployment process by building both services from the main `ogdrip` repository and running them in a single container.
+OG Drip supports multiple Docker deployment approaches:
+
+1. **Docker Compose (Recommended)**: Production-ready setup with proper orchestration
+2. **Multi-stage Dockerfile**: Single container approach for simpler deployments
+3. **Development Setup**: Hot-reload development environment
+
+The application stack includes both Go backend and Astro frontend services with proper health checks, persistent volumes, and monitoring capabilities.
+
+## Quick Start with Docker Compose
+
+### 1. Production Deployment
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/ogdrip.git
+cd ogdrip
+
+# Copy environment template
+cp .env.example .env
+
+# Edit .env with your configuration
+nano .env
+
+# Deploy with Docker Compose
+docker-compose up -d
+
+# Check status
+docker-compose ps
+docker-compose logs -f
+```
+
+### 2. Development Setup
+
+```bash
+# Start development environment with hot reload
+docker-compose -f docker-compose.dev.yml up
+
+# Or run specific services
+docker-compose -f docker-compose.dev.yml up ogdrip-dev
+```
+
+## Docker Compose Configuration
+
+### Production Setup (`docker-compose.yml`)
+
+The production configuration includes:
+
+- **Persistent volumes** for data, outputs, and logs
+- **Health checks** with automatic restarts
+- **Resource limits** (2GB RAM, 2 CPU cores)
+- **Network isolation** with custom bridge network
+- **Traefik labels** for reverse proxy integration
+- **Environment-based configuration**
+
+Key features:
+- Uses `Dockerfile.production` for optimized builds
+- Includes Chromium and font packages
+- Proper signal handling and graceful shutdown
+- Backup-aware volume labeling
+
+### Development Setup (`docker-compose.dev.yml`)
+
+The development configuration provides:
+
+- **Live code reloading** with volume mounts
+- **Debug-friendly** environment variables
+- **Relaxed rate limiting** for testing
+- **Node modules caching** for faster rebuilds
+- **Optional services** (database, proxy) via profiles
+
+### Environment Configuration
+
+Create a `.env` file from `.env.example`:
+
+```bash
+# Required settings
+DOMAIN=your-domain.com
+ADMIN_TOKEN=your-secure-token-here
+BASE_URL=https://your-domain.com
+PUBLIC_BACKEND_URL=https://your-domain.com
+
+# Optional performance settings
+BROWSER_TIMEOUT=60
+MAX_CONCURRENT_GENERATIONS=3
+RATE_LIMIT_REQUESTS=100
+```
+
+See [Environment Variables](#environment-variables) section for complete list.
 
 ## Dockerfile Structure
 
