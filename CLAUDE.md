@@ -34,7 +34,7 @@ pnpm setup
 pnpm dev
 
 # Start individual services
-pnpm dev:frontend    # Astro dev server on :3000
+pnpm dev:frontend    # Astro dev server on :5000
 pnpm dev:backend     # Go backend on :8888
 
 # Build all packages
@@ -124,7 +124,7 @@ go test ./...
 - `GET /api/openapi.yaml` - OpenAPI specification
 - Image generation endpoints (see backend/openapi.yaml for full API)
 
-### Frontend (Port 3000)
+### Frontend (Port 5000)
 - Admin interface for managing OG image generation
 - Built with Astro + Svelte 5
 

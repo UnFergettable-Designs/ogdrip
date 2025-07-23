@@ -11,7 +11,7 @@ services:
     container_name: ogdrip
     ports:
       - "8888:8888"   # Backend API
-      - "3000:3000"   # Frontend (if served separately)
+      - "5000:5000"   # Frontend (if served separately)
     environment:
       # Core Configuration
       - NODE_ENV=production
@@ -30,7 +30,7 @@ services:
       
       # Security
       - ADMIN_TOKEN=${ADMIN_TOKEN:-change-this-in-production}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8888}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5000,http://localhost:8888}
       
       # Browser Configuration
       - CHROME_PATH=/usr/bin/chromium

@@ -9,7 +9,7 @@ services:
     container_name: ogdrip-dev
     ports:
       - "8888:8888"   # Backend API
-      - "3000:3000"   # Frontend dev server
+      - "5000:5000"   # Frontend dev server
       - "24678:24678" # Vite HMR
     environment:
       # Development Configuration
@@ -29,7 +29,7 @@ services:
       
       # Security (development defaults)
       - ADMIN_TOKEN=dev-token-change-in-production
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:8888,http://127.0.0.1:3000
+      - CORS_ORIGINS=http://localhost:5000,http://localhost:8888,http://127.0.0.1:5000
       
       # Browser Configuration
       - CHROME_PATH=/usr/bin/chromium
